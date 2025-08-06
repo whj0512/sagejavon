@@ -25,7 +25,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '/chat/:uuid?',
-        name: 'Chat',
+        name: 'ChatDetail',
         component: () => import('@/views/chat/index.vue'),
       },
       {
