@@ -19,6 +19,7 @@ import { useChat } from "./hooks/useChat";
 import { useUsingContext } from "./hooks/useUsingContext";
 import { smartQueryStream } from "./api/smart_query_stream";
 // import { chatTutor } from "./api/chat_tutor";
+import { chatMessage } from "./api/chat_message";
 import { HoverButton, SvgIcon } from "@/components/common";
 import { useBasicLayout } from "@/hooks/useBasicLayout";
 import { useChatStore, usePromptStore } from "@/store";
@@ -89,7 +90,7 @@ async function onConversation() {
   const message = prompt.value;
 
   // 将用户的聊天保存到数据库
-  chatTutor({
+  chatMessage({
     chatId: Number(localStorage.getItem("active-uuid")),
     role: 0,
     content: message,
@@ -173,7 +174,7 @@ async function onConversation() {
       });
 
       // 保存模型回复
-      chatTutor({
+      chatMessage({
         chatId: Number(localStorage.getItem("active-uuid")),
         role: 1,
         content: finalResponse,

@@ -38,7 +38,7 @@ def check_env_variables():
 
         # GLM_MODEL_NAME: Specific GLM model being used, e.g., 'glm-3-turbo' or 'glm-4'.
         GLM_MODEL_NAME = os.getenv('GLM_MODEL_NAME')
-        if GLM_MODEL_NAME not in ['glm-3-turbo', 'glm-4', 'glm-4-flash','glm-4-plus','GLM-4-Air']:
+        if GLM_MODEL_NAME not in ['glm-3-turbo', 'glm-4', 'glm-4-flash','glm-4-plus','GLM-4-Air', 'GLM-4.5-Flash']:
             logger.error(
                 f"GLM_MODEL_NAME: '{GLM_MODEL_NAME}' is illegal! Must be 'glm-3-turbo' or 'glm-4'")
             sys.exit(-1)

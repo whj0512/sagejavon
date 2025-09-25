@@ -452,8 +452,8 @@ const renderOption = (option: { label: string }) => {
 };
 
 const placeholder = computed(() => {
-  if (isMobile.value) return t("chat.placeholderMobile");
-  return t("chat.placeholder");
+  if (isMobile.value) return t("placeholderMobile");
+  return t("placeholder");
 });
 
 const buttonDisabled = computed(() => {

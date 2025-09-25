@@ -5,7 +5,7 @@ export const BASE_URL = 'http://localhost:8080';
 
 const service = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 300000,
   headers: {
     'Content-Type': 'application/json',
   }
