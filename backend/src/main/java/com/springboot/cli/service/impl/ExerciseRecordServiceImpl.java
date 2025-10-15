@@ -9,6 +9,7 @@ import com.springboot.cli.model.DO.ExerciseRecordDO;
 import com.springboot.cli.model.VO.exercise.ExerciseRecordPage;
 import com.springboot.cli.repository.impl.ExerciseRecordRepository;
 import com.springboot.cli.service.ExerciseRecordService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ExerciseRecordServiceImpl implements ExerciseRecordService {
-    @Resource
+    @Autowired
     private ExerciseRecordRepository exerciseRecordRepository;
 
     @Override

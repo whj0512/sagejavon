@@ -81,7 +81,7 @@ public class ExerciseController {
     }
 
     @GetMapping("/list")
-    public BaseResponse<ExerciseVOPage> getExerciseList(Integer type, @RequestParam(defaultValue = "1") Integer pageNum, @RequestParam(defaultValue = "10") Integer pageSize, Integer difficulty, String knowledgeId, Integer difficultyOrder, String chapter) {
+    public BaseResponse<ExerciseVOPage> getExerciseList(Integer type, @RequestParam(defaultValue = "1") Integer pageNum, @RequestParam(defaultValue = "10") Integer pageSize, Integer difficulty, String knowledgeId, Integer difficultyOrder, String chapter ) {
         try {
             List<Long> knowledgeIdList = null;
             if (knowledgeId != null && !knowledgeId.isEmpty())

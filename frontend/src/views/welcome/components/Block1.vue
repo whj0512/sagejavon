@@ -2,21 +2,30 @@
   <div ref="overlay" class="overlay" v-show="isLogin" @click="cancel"></div>
   <div ref="signInContainer" class="sign-in-container" v-show="isLogin">
     <div class="close-btn" @click="cancel">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd"
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
           d="M15.449 0.31347C15.031 -0.104491 14.3534 -0.10449 13.9354 0.313471L7.88132 6.36765L2.06458 0.550824C1.64662 0.132863 0.968982 0.132863 0.551027 0.550824C0.133072 0.968785 0.133073 1.64644 0.551028 2.0644L6.36777 7.88122L0.313466 13.9356C-0.104489 14.3536 -0.104489 15.0312 0.313466 15.4492C0.731421 15.8671 1.40906 15.8671 1.82702 15.4492L7.88132 9.3948L14.173 15.6865C14.5909 16.1045 15.2686 16.1045 15.6865 15.6865C16.1045 15.2686 16.1045 14.5909 15.6865 14.173L9.39487 7.88122L15.449 1.82704C15.8669 1.40908 15.8669 0.731432 15.449 0.31347Z"
-          fill="#181818" />
+          fill="#181818"
+        />
       </svg>
     </div>
     <div class="header">Welcome to SageJavon.</div>
     <div class="notice">
-      {{ t('agreeNotice') }} <a>{{ t('terms') }}</a> {{ t('and') }} <a>{{ t('privacy') }}</a>
+      {{ t('agreeNotice') }} <a>{{ t('terms') }}</a> {{ t('and') }}
+      <a>{{ t('privacy') }}</a>
     </div>
     <!-- 登录 -->
     <LoginPasswordForm />
-
-
   </div>
+  <Modal @assistant-selected="onAssistantSelected" ref="assistantModal" />
   <div class="block1Container" :style="{ height: height + 'px' }">
     <div class="placeholder"></div>
     <div class="blockContent">
@@ -31,9 +40,11 @@
           </div>
           <!-- 按钮盒子 -->
           <div class="btnBox">
-            <button class="btn main" @click="useOnline">{{ t('start') }}</button>
-            <button class="btn" @click="jumpDoc">{{ t('doc') }}</button>
-            <button class="btn" @click="goToGitHub">GitHub</button>
+            <button class="btn main" @click="useOnline">
+              {{ t('start') }}
+            </button>
+            <!-- <button class="btn" @click="jumpDoc">{{ t('doc') }}</button>
+            <button class="btn" @click="goToGitHub">GitHub</button> -->
           </div>
         </div>
         <div class="picBox">
@@ -55,15 +66,16 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import goToGitHub from "./api/goToGitHub";
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import goToGitHub from './api/goToGitHub'
 import LoginPasswordForm from './Login.vue'
 import { t } from '@/locales'
+import Modal from '@/components/Modal/Modal.vue'
 
-const isLogin = ref(false);
-const router = useRouter();
-const height = ref(0);
+const isLogin = ref(false)
+const router = useRouter()
+const height = ref(0)
 const cardContent = [
   { id: 1, title: t('title1'), desc: t('desc1') },
   { id: 2, title: t('title2'), desc: t('desc2') },
@@ -80,270 +92,284 @@ import {
   NTabPane,
   NTabs,
   useMessage,
-} from "naive-ui";
-import { signInByVerifyCode } from "./api/signIn/sign_in_by_verifyCode";
-import { signInByPassword } from "./api/signIn/sign_in_by_password";
-import { sendVerifyCode } from "./api/signIn/send_verify_code";
-import { getUserInfo } from "./api/info/get_user_info";
+} from 'naive-ui'
+import { signInByVerifyCode } from './api/signIn/sign_in_by_verifyCode'
+import { signInByPassword } from './api/signIn/sign_in_by_password'
+import { sendVerifyCode } from './api/signIn/send_verify_code'
+import { getUserInfo } from './api/info/get_user_info'
 const themeOverrides = {
   common: {
-    primaryColor: "#000",
-    primaryColorHover: "#000",
+    primaryColor: '#000',
+    primaryColorHover: '#000',
   },
-};
-const message = useMessage();
-const account = ref("");
-const password = ref("");
-const verifyCode = ref("");
-const showVerifyCode = ref(false);
-const signInType = ref("verifyCode");
-const user = ref(null);
-console.log(localStorage.getItem("userInfo"));
+}
+const message = useMessage()
+const account = ref('')
+const password = ref('')
+const verifyCode = ref('')
+const showVerifyCode = ref(false)
+const signInType = ref('verifyCode')
+const user = ref(null)
+console.log(localStorage.getItem('userInfo'))
 // 验证码倒计时
 // 在setup中定义一个ref用于存储倒计时剩余时间
-const countdown = ref(0);
+const countdown = ref(0)
 
 const overlay = ref(null)
 const signInContainer = ref(null)
 
 onMounted(() => {
-  window.addEventListener("resize", onResize);
-  onResize();
-});
+  window.addEventListener('resize', onResize)
+  onResize()
+})
 
 onUnmounted(() => {
-  window.removeEventListener("resize", onResize);
-});
+  window.removeEventListener('resize', onResize)
+})
 
 const onResize = () => {
-  height.value = window.innerHeight;
-};
+  height.value = window.innerHeight
+}
 
+// 创建 ref 引用 Modal 组件
+const assistantModal = ref(null)
+
+// 现有的用在线逻辑
 const useOnline = () => {
-  if (localStorage.getItem("user-token")) {
-    router.push("/chat");
+  if (localStorage.getItem('user-token')) {
+    // 如果用户已登录，跳转到聊天页面
+    const assistantType = localStorage.getItem('assistantType') // 获取保存的助手类型
+    router.push(`/chat/${assistantType}`)
   } else {
-    isLogin.value = true;
+    // 如果用户未登录，显示登录界面
+    isLogin.value = true
     setTimeout(() => {
-      overlay.value.classList.add("overlay-blur");
-      signInContainer.value.classList.add("sign-in-appear");
-    }, 0);
+      overlay.value.classList.add('overlay-blur')
+      signInContainer.value.classList.add('sign-in-appear')
+    }, 0)
   }
-};
+}
+
+// 选择了助手类型后，根据选择跳转
+const onAssistantSelected = (type) => {
+  // 将选择的助手类型保存到 localStorage
+  localStorage.setItem('assistantType', type)
+  router.push(`/chat/${type}`) // 跳转到选择的助手页面
+}
 
 const jumpDoc = () => {
-  router.push("/doc/zh/");
-};
+  router.push('/doc/zh/')
+}
 
 // 定义一个函数用于启动倒计时
 function startCountdown() {
-  countdown.value = 60; // 设置倒计时初始值为60秒
+  countdown.value = 60 // 设置倒计时初始值为60秒
   const timer = setInterval(() => {
-    countdown.value--; // 每秒减少一秒
-    if (countdown.value <= 0) clearInterval(timer); // 当倒计时结束时清除定时器
-  }, 1000);
+    countdown.value-- // 每秒减少一秒
+    if (countdown.value <= 0) clearInterval(timer) // 当倒计时结束时清除定时器
+  }, 1000)
 }
 // 监听countdown的变化，当倒计时结束时将showVerifyCode设置为true
 watch(countdown, (val) => {
-  if (val === 0) showVerifyCode.value = true;
-});
+  if (val === 0) showVerifyCode.value = true
+})
 
 function warning(content) {
-  message.warning(content, { closabale: true, duration: 3e3 });
+  message.warning(content, { closabale: true, duration: 3e3 })
 }
 
 function error(content) {
-  message.error(content, { closabale: true, duration: 3e3 });
+  message.error(content, { closabale: true, duration: 3e3 })
 }
 
 function success(content) {
-  message.success(content, { closabale: true, duration: 3e3 });
+  message.success(content, { closabale: true, duration: 3e3 })
 }
 
 // 注册事件：检查账号是否合法，发送验证码，注册并登录
 async function register() {
-  const validateResult = __validateAccount(account.value);
-  if (validateResult !== "合法") {
-    account.value = "";
+  const validateResult = __validateAccount(account.value)
+  if (validateResult !== '合法') {
+    account.value = ''
     // alert(validateResult)
-    warning(validateResult);
-    return;
+    warning(validateResult)
+    return
   }
 
-  showVerifyCode.value = true;
+  showVerifyCode.value = true
 
   sendVerifyCode(account.value)
     .then((res) => {
       // console.log(res)
-      if (res.status === 200) showVerifyCode.value = true;
+      if (res.status === 200) showVerifyCode.value = true
       //   alert('验证码发送失败，请稍后再试')
-      else error("验证码发送失败，请稍后再试");
+      else error('验证码发送失败，请稍后再试')
     })
     .catch(() => {
       // console.log(err)
       // alert('验证码发送失败，请稍后再试')
-      error("验证码发送失败，请稍后再试");
-    });
+      error('验证码发送失败，请稍后再试')
+    })
 }
 
 // 通过验证码注册并登录，将user缓存到localStorage
 async function registerVerify() {
-  const validateResult = __validateVerifyCode(verifyCode.value);
-  if (validateResult !== "合法") {
-    verifyCode.value = "";
+  const validateResult = __validateVerifyCode(verifyCode.value)
+  if (validateResult !== '合法') {
+    verifyCode.value = ''
     // alert(validateResult)
-    warning(validateResult);
-    return;
+    warning(validateResult)
+    return
   }
   signInByVerifyCode(account.value, verifyCode.value)
     .then((res) => {
-      console.log(res);
+      console.log(res)
       if (res.status === 200) {
-        user.value = res;
-        localStorage.setItem("userInfo", JSON.stringify(res));
+        user.value = res
+        localStorage.setItem('userInfo', JSON.stringify(res))
         // 登录成功，返回首页
-        window.location.href = "/";
+        window.location.href = '/'
       } else {
         // alert('验证码错误，请重新输入')
-        error("验证码错误，请重新输入");
+        error('验证码错误，请重新输入')
       }
     })
     .catch(() => {
       //   console.log(err)
       //   alert('验证码错误，请重新输入')
-      error("验证码错误，请重新输入");
+      error('验证码错误，请重新输入')
     })
     .finally(() => {
-      verifyCode.value = "";
-    });
+      verifyCode.value = ''
+    })
 }
 
 // 修改发送验证码的函数，使其在发送验证码时启动倒计时
 async function verifyCode_signIn() {
-  const validateResult = __validateAccount(account.value);
-  if (validateResult !== "合法") {
-    warning(validateResult);
-    return;
+  const validateResult = __validateAccount(account.value)
+  if (validateResult !== '合法') {
+    warning(validateResult)
+    return
   }
 
   sendVerifyCode(account.value)
     .then((res) => {
-      console.log(res);
+      console.log(res)
       if (res.status === 200) {
-        success("验证码发送成功，请注意查收");
-        startCountdown(); // 发送验证码成功后启动倒计时
+        success('验证码发送成功，请注意查收')
+        startCountdown() // 发送验证码成功后启动倒计时
       } else {
-        error("您发送的太过频繁，请稍候再试");
+        error('您发送的太过频繁，请稍候再试')
       }
     })
     .catch(() => {
-      error("验证码发送失败，请稍后再试");
-    });
+      error('验证码发送失败，请稍后再试')
+    })
 }
 // 登录事件：根据登录方式，调用相应的登录函数
 async function signIn(type) {
-  const validateResult = __validateAccount(account.value);
-  if (validateResult !== "合法") {
-    account.value = "";
+  const validateResult = __validateAccount(account.value)
+  if (validateResult !== '合法') {
+    account.value = ''
     // alert(validateResult)
-    warning(validateResult);
-    return;
+    warning(validateResult)
+    return
   }
 
-  let res = null;
-  if (type === "verifyCode") {
-    const validateResult = __validateVerifyCode(verifyCode.value);
-    if (validateResult !== "合法") {
-      verifyCode.value = "";
+  let res = null
+  if (type === 'verifyCode') {
+    const validateResult = __validateVerifyCode(verifyCode.value)
+    if (validateResult !== '合法') {
+      verifyCode.value = ''
       //   alert(validateResult)
-      warning(validateResult);
-      return;
+      warning(validateResult)
+      return
     }
-    res = signInByVerifyCode(account.value, verifyCode.value);
+    res = signInByVerifyCode(account.value, verifyCode.value)
   }
 
   res
     .then((res) => {
-      console.log(res);
+      console.log(res)
       if (res.userId) {
-        user.value = res;
-        localStorage.setItem("user-token", res.accessToken);
-        localStorage.setItem("user-id", res.userId);
+        user.value = res
+        localStorage.setItem('user-token', res.accessToken)
+        localStorage.setItem('user-id', res.userId)
         getUserInfo()
           .then((userInfoRes) => {
-            console.log(userInfoRes);
+            console.log(userInfoRes)
             if (userInfoRes.status === 200) {
-              console.log(userInfoRes.data.data);
+              console.log(userInfoRes.data.data)
               // 在这里处理获取到的用户信息
               localStorage.setItem(
-                "userInfo",
-                JSON.stringify(userInfoRes.data.data)
-              );
+                'userInfo',
+                JSON.stringify(userInfoRes.data.data),
+              )
             }
           })
           .catch((err) => {
             // 在这里处理获取用户信息失败的情况
-            console.log(err);
-          });
+            console.log(err)
+          })
         // 调用 getUserInfo 获取用户信息
         // 登录成功，返回首页
-        router.push("/chat");
+        router.push('/chat')
       } else {
         //   alert(res.msg)
-        error(res.msg);
+        error(res.msg)
       }
     })
     .catch(() => {
       console.log(err)
       // alert('登录失败，请稍后再试')
-      error("登录失败，请稍后再试");
-    });
+      error('登录失败，请稍后再试')
+    })
 }
 
 // 账号的合法性检查：邮箱格式
 function __validateAccount(account) {
-  let res = "";
-  if (account === null || account.trim() === "") res = "请输入账号";
+  let res = ''
+  if (account === null || account.trim() === '') res = '请输入账号'
 
-  const pattern = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+/;
-  if (pattern.test(account)) res = "合法";
-  else res = "账号格式不正确";
+  const pattern = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+/
+  if (pattern.test(account)) res = '合法'
+  else res = '账号格式不正确'
 
-  return res;
+  return res
 }
 
 // 密码的合法性检查：密码长度、是否包含数字、是否包含字母、是否包含特殊字符
 function __validatePassword(password) {
-  let res = "";
-  if (password === null || password.trim() === "") res = "请输入密码";
+  let res = ''
+  if (password === null || password.trim() === '') res = '请输入密码'
 
-  const pattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[0-9a-zA-Z\W]{8,20}$/;
-  if (pattern.test(password)) res = "合法";
-  else res = "密码格式不正确";
+  const pattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)[0-9a-zA-Z\W]{8,20}$/
+  if (pattern.test(password)) res = '合法'
+  else res = '密码格式不正确'
 
-  return res;
+  return res
 }
 
 // 验证码的合法性检查：6位数字
 function __validateVerifyCode(verifyCode) {
-  let res = "";
-  if (verifyCode === null || verifyCode.trim() === "") res = "请输入验证码";
+  let res = ''
+  if (verifyCode === null || verifyCode.trim() === '') res = '请输入验证码'
 
-  const pattern = /^\d{6}$/;
-  if (pattern.test(verifyCode)) res = "合法";
-  else res = "验证码格式不正确";
+  const pattern = /^\d{6}$/
+  if (pattern.test(verifyCode)) res = '合法'
+  else res = '验证码格式不正确'
 
-  return res;
+  return res
 }
 
 function cancel() {
-  account.value = "";
-  verifyCode.value = "";
+  account.value = ''
+  verifyCode.value = ''
 
-  user.value = null;
-  overlay.value.classList.remove("overlay-blur");
-  signInContainer.value.classList.remove("sign-in-appear");
-  isLogin.value = false;
+  user.value = null
+  overlay.value.classList.remove('overlay-blur')
+  signInContainer.value.classList.remove('sign-in-appear')
+  isLogin.value = false
 }
 </script>
 
@@ -358,8 +384,7 @@ function cancel() {
   z-index: 999;
   backdrop-filter: blur(0px);
   opacity: 0;
-  transition: backdrop-filter 320ms ease-out,
-    opacity 280ms;
+  transition: backdrop-filter 320ms ease-out, opacity 280ms;
 }
 
 .overlay.overlay-blur {
@@ -368,7 +393,7 @@ function cancel() {
 }
 
 .sign-in-container {
-  transition: all 280ms cubic-bezier(0.430, 0.010, 0.000, 1);
+  transition: all 280ms cubic-bezier(0.43, 0.01, 0, 1);
   position: fixed;
   top: 50%;
   left: 50%;
@@ -405,7 +430,7 @@ function cancel() {
     left: 0;
     width: 100%;
     text-align: center;
-    color: #B3B3B3;
+    color: #b3b3b3;
     font-size: 11px;
     letter-spacing: 0.2px;
 
@@ -425,16 +450,16 @@ function cancel() {
   }
 
   .get-code-btn::before {
-    content: "|";
+    content: '|';
     position: absolute;
     left: -25%;
     font-size: 18px;
-    color: #D9D9D9;
+    color: #d9d9d9;
     pointer-events: none;
   }
 
   .get-code-btn:hover {
-    color: #36AD6A;
+    color: #36ad6a;
   }
 
   .button-container {
@@ -500,11 +525,17 @@ function cancel() {
           max-width: 600px;
 
           .txt1 {
-            font-family: "Punctuation SC", "Inter", ui-sans-serif, system-ui, "Noto Sans SC", "Heiti SC", "Microsoft YaHei", "DengXian", sans-serif;
+            font-family: 'Punctuation SC', 'Inter', ui-sans-serif, system-ui,
+              'Noto Sans SC', 'Heiti SC', 'Microsoft YaHei', 'DengXian',
+              sans-serif;
             font-weight: 700;
             line-height: 72px;
             font-size: 56px;
-            background: linear-gradient(93.62deg, #F37676 4.09%, #FBCD2C 108.47%);
+            background: linear-gradient(
+              93.62deg,
+              #f37676 4.09%,
+              #fbcd2c 108.47%
+            );
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -512,7 +543,9 @@ function cancel() {
 
           .txt2 {
             letter-spacing: 0px;
-            font-family: "Punctuation SC", "Inter", ui-sans-serif, system-ui, "Noto Sans SC", "Heiti SC", "Microsoft YaHei", "DengXian", sans-serif;
+            font-family: 'Punctuation SC', 'Inter', ui-sans-serif, system-ui,
+              'Noto Sans SC', 'Heiti SC', 'Microsoft YaHei', 'DengXian',
+              sans-serif;
             font-weight: 700;
             line-height: 64px;
             font-size: 40px;
@@ -558,7 +591,6 @@ function cancel() {
           .btn:not(.main):hover {
             background-color: #00000020;
           }
-
         }
       }
 
@@ -568,7 +600,7 @@ function cancel() {
         .pic {
           width: 320px;
           height: 300px;
-          background-image: url("../../../assets/sagejavon.png");
+          background-image: url('../../../assets/sagejavon.png');
           background-size: cover;
         }
 
@@ -704,7 +736,6 @@ function cancel() {
     .content-header {
       .infoBox {
         .txtBox {
-
           .txt1,
           .txt2 {
             font-size: 42px;
@@ -734,14 +765,12 @@ function cancel() {
       flex-direction: column;
     }
   }
-
 }
 
 @media screen and (max-width: 436px) {
   .block1Container .blockContent .content-header {
     .infoBox {
       .txtBox {
-
         .txt1,
         .txt2 {
           font-size: 36px;

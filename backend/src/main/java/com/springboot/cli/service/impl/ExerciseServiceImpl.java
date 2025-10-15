@@ -17,6 +17,7 @@ import com.springboot.cli.repository.impl.ExerciseKnowledgeRepository;
 import com.springboot.cli.repository.impl.ExerciseRecordRepository;
 import com.springboot.cli.repository.impl.ExerciseRepository;
 import com.springboot.cli.service.ExerciseService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -32,16 +33,16 @@ import static com.springboot.cli.common.CommonConstants.submitNumThreshold;
 
 @Service
 public class ExerciseServiceImpl implements ExerciseService {
-    @Resource
+    @Autowired
     ExerciseRepository exerciseRepository;
 
-    @Resource
+    @Autowired
     ExerciseRecordRepository exerciseRecordRepository;
 
-    @Resource
+    @Autowired
     ExerciseKnowledgeRepository exerciseKnowledgeRepository;
 
-    @Resource
+    @Autowired
     RestTemplate restTemplate;
 
     @Override

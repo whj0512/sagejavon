@@ -24,7 +24,7 @@ def check_env_variables():
 
         # GPT_MODEL_NAME: Specific GPT model being used, e.g., 'gpt-3.5-turbo' or 'gpt-4-turbo', or 'gpt-4o'.
         GPT_MODEL_NAME = os.getenv('GPT_MODEL_NAME')
-        gpt_model_name_list = ['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o']
+        gpt_model_name_list = ['gpt-3.5-turbo', 'gpt-4-turbo', 'gpt-4o', 'glm-4.5-flash']
         if GPT_MODEL_NAME not in gpt_model_name_list:
             logger.error(
                 f"GPT_MODEL_NAME: '{GPT_MODEL_NAME}' is illegal! Must be in {gpt_model_name_list}")
@@ -38,7 +38,7 @@ def check_env_variables():
 
         # GLM_MODEL_NAME: Specific GLM model being used, e.g., 'glm-3-turbo' or 'glm-4'.
         GLM_MODEL_NAME = os.getenv('GLM_MODEL_NAME')
-        if GLM_MODEL_NAME not in ['glm-3-turbo', 'glm-4', 'glm-4-flash','glm-4-plus','GLM-4-Air', 'GLM-4.5-Flash']:
+        if GLM_MODEL_NAME not in ['glm-3-turbo', 'glm-4', 'glm-4-flash','glm-4-plus','GLM-4-Air', 'glm-4.5-flash']:
             logger.error(
                 f"GLM_MODEL_NAME: '{GLM_MODEL_NAME}' is illegal! Must be 'glm-3-turbo' or 'glm-4'")
             sys.exit(-1)

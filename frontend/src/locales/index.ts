@@ -8,7 +8,7 @@ import ruRU from './ru-RU'
 import { useAppStoreWithOut } from '@/store/modules/app'
 import type { Language } from '@/store/modules/app/helper'
 const STORAGE_KEY = 'app-language'
-const savedLocale = localStorage.getItem(STORAGE_KEY) || 'en-US'
+const savedLocale = localStorage.getItem(STORAGE_KEY) || 'zh-CH'
 const appStore = useAppStoreWithOut()
 appStore.setLanguage(savedLocale as Language) // 同步 Vuex 状态
 
@@ -24,7 +24,6 @@ const i18n = createI18n({
     'ru-RU': ruRU,
   },
 })
-
 
 export const t = i18n.global.t
 

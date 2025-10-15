@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.springboot.cli.common.AppProperties;
 import com.springboot.cli.common.constants.KnowledgeGraphConstants;
+import com.springboot.cli.common.constants.KnowledgeGraphPythonConstants;
 import com.springboot.cli.common.enums.OpExceptionEnum;
 import com.springboot.cli.common.exception.OpException;
 import com.springboot.cli.common.jwt.AuthStorage;
@@ -12,11 +13,11 @@ import com.springboot.cli.common.utils.JwtUtil;
 import com.springboot.cli.model.DO.KnowledgeEdgesDO;
 import com.springboot.cli.model.DO.KnowledgeNodesDO;
 import com.springboot.cli.model.DO.StudentDO;
+import com.springboot.cli.model.DO.python.KnowledgeEdgesPythonDO;
+import com.springboot.cli.model.DO.python.KnowledgeNodesPythonDO;
 import com.springboot.cli.model.VO.StudentKnowledgeGraphVO;
 import com.springboot.cli.model.VO.StudentVO;
-import com.springboot.cli.repository.impl.KnowledgeEdgesRepository;
-import com.springboot.cli.repository.impl.KnowledgeNodesRepository;
-import com.springboot.cli.repository.impl.StudentRepository;
+import com.springboot.cli.repository.impl.*;
 import com.springboot.cli.service.StudentService;
 import org.apache.tomcat.jni.Local;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,10 @@ public class StudentServiceImpl implements StudentService {
     KnowledgeNodesRepository knowledgeNodesRepository;
     @Autowired
     private AppProperties appProperties;
+    @Autowired
+    private KnowledgeNodesPythonRepository knowledgeNodesPythonRepository;
+    @Autowired
+    private KnowledgeEdgesPythonRepository knowledgeEdgesPythonRepository;
 
     @Override
     public StudentDO getStuInfo() {
@@ -100,9 +105,44 @@ public class StudentServiceImpl implements StudentService {
     }
 
     // 7. 初始化方法调用
+    // 7. 初始化方法调用
     public void initKnowledgeGraphForStudent(String studentId) {
         // 初始化节点
-        List<KnowledgeNodesDO> nodes = KnowledgeGraphConstants.DEFAULT_NODES.stream()
+        List<KnowledgeNodesPythonDO> nodes = KnowledgeGraphPythonConstants.DEFAULT_PY_NODES.stream()
+                .map(node -> {
+                    KnowledgeNodesPythonDO n = new KnowledgeNodesPythonDO();
+                    n.setStudentId(studentId);
+                    n.setNodeId(node.getNodeId());
+                    n.setText(node.getText());
+                    n.setWidth(140);  // 初始化宽高为 0
+                    n.setHeight(120);
+                    n.setCreateTime(LocalDateTime.now());
+                    n.setUpdateTime(LocalDateTime.now());
+                    return n;
+                })
+                .toList();
+
+        // 初始化边
+        List<KnowledgeEdgesPythonDO> edges = KnowledgeGraphPythonConstants.DEFAULT_PY_EDGES.stream()
+                .map(edge -> {
+                    KnowledgeEdgesPythonDO e = new KnowledgeEdgesPythonDO();
+                    e.setStudentId(studentId);
+                    e.setFromNodeId(edge.getFromNodeId()); // 起点逻辑ID
+                    e.setToNodeId(edge.getToNodeId());     // 终点逻辑ID
+                    e.setLabel(edge.getLabel());      // 连线标签
+                    e.setCreateTime(LocalDateTime.now());
+                    e.setUpdateTime(LocalDateTime.now());
+                    return e;
+                })
+                .toList();
+
+        // 批量保存
+        knowledgeNodesPythonRepository.saveBatch(nodes);
+        knowledgeEdgesPythonRepository.saveBatch(edges);
+
+
+        // 初始化节点
+        List<KnowledgeNodesDO> nodesjava = KnowledgeGraphConstants.DEFAULT_NODES.stream()
                 .map(node -> {
                     KnowledgeNodesDO n = new KnowledgeNodesDO();
                     n.setStudentId(studentId);
@@ -117,7 +157,7 @@ public class StudentServiceImpl implements StudentService {
                 .toList();
 
         // 初始化边
-        List<KnowledgeEdgesDO> edges = KnowledgeGraphConstants.DEFAULT_EDGES.stream()
+        List<KnowledgeEdgesDO> edgesjava = KnowledgeGraphConstants.DEFAULT_EDGES.stream()
                 .map(edge -> {
                     KnowledgeEdgesDO e = new KnowledgeEdgesDO();
                     e.setStudentId(studentId);
@@ -131,10 +171,9 @@ public class StudentServiceImpl implements StudentService {
                 .toList();
 
         // 批量保存
-        knowledgeNodesRepository.saveBatch(nodes);
-        knowledgeEdgesRepository.saveBatch(edges);
+        knowledgeNodesRepository.saveBatch(nodesjava);
+        knowledgeEdgesRepository.saveBatch(edgesjava);
     }
-
 
 
 

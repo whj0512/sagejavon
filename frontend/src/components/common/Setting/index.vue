@@ -1,4 +1,4 @@
-<script setup lang='ts'>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { NModal, NTabPane, NTabs } from 'naive-ui'
 import General from './General.vue'
@@ -36,13 +36,18 @@ const show = computed({
 </script>
 
 <template>
-  <NModal v-model:show="show" :auto-focus="false" preset="card" style="width: 95%; max-width: 640px">
+  <NModal
+    v-model:show="show"
+    :auto-focus="false"
+    preset="card"
+    style="width: 95%; max-width: 640px"
+  >
     <div>
       <NTabs v-model:value="active" type="line" animated>
         <NTabPane name="General" tab="General">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:file-user-line" />
-            <span class="ml-2">修改个人资料</span>
+            <SvgIcon class="text-lg" icon="ri:settings-3-line" />
+            <span class="ml-2">个人资料 · 设置</span>
           </template>
           <div class="min-h-[100px]">
             <General />
@@ -57,13 +62,13 @@ const show = computed({
             <Advanced />
           </div>
         </NTabPane> -->
-        <NTabPane name="Config" tab="Config">
+        <!-- <NTabPane name="Config" tab="Config">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:list-settings-line" />
             <span class="ml-2">其他配置</span>
           </template>
           <About />
-        </NTabPane>
+        </NTabPane> -->
       </NTabs>
     </div>
   </NModal>

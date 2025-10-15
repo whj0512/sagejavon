@@ -10,6 +10,7 @@ import com.springboot.cli.model.VO.SMessageVO;
 import com.springboot.cli.repository.impl.ChatRepository;
 import com.springboot.cli.repository.impl.HistoryRepository;
 import com.springboot.cli.service.HistoryService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,10 @@ import java.util.List;
 
 @Service
 public class HistoryServiceImpl implements HistoryService {
-    @Resource
+    @Autowired
     private ChatRepository chatRepository;
 
-    @Resource
+    @Autowired
     private HistoryRepository historyRepository;
 
     @Override

@@ -1,148 +1,144 @@
 <script setup lang="ts">
-import type { CSSProperties } from "vue";
-import { computed, reactive, ref, watch } from "vue";
-import {
-  NLayoutSider,
-  NSpin,
-  useMessage,
-} from "naive-ui";
-import { useRouter } from "vue-router";
-import List from "./List.vue";
-import Footer from "./Footer.vue";
-import { useAppStore, useChatStore } from "@/store";
-import { useBasicLayout } from "@/hooks/useBasicLayout";
-import defaultModel from "@/assets/sagejavon.png";
-import { newChat } from "@/views/chat/api/new_chat";
-import icon from "../icon/index";
+import type { CSSProperties } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import { NLayoutSider, NSpin, useMessage } from 'naive-ui'
+import { useRouter } from 'vue-router'
+import List from './List.vue'
+import Footer from './Footer.vue'
+import { useAppStore, useChatStore } from '@/store'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
+import defaultModel from '@/assets/sagejavon.png'
+import { newChat } from '@/views/chat/api/new_chat'
+import icon from '../icon/index'
 import { t } from '@/locales'
 
-const router = useRouter();
-const appStore = useAppStore();
-const chatStore = useChatStore();
-const { isMobile } = useBasicLayout();
-const show = ref(true);
-const message = useMessage();
-const loading = ref(false); // 加载状态
+const router = useRouter()
+const appStore = useAppStore()
+const chatStore = useChatStore()
+const { isMobile } = useBasicLayout()
+const show = ref(true)
+const message = useMessage()
+const loading = ref(false) // 加载状态
 
-const collapsed = computed(() => appStore.siderCollapsed);
-const uuid = localStorage.getItem("active-uuid");
+const collapsed = computed(() => appStore.siderCollapsed)
+const uuid = localStorage.getItem('active-uuid')
 
 const icons = function () {
-  let dataInit = reactive([icon.mindmap, icon.chat, icon.code, icon.study]);
-  let data = ref([...dataInit]); // 使用 ref 创建响应式对象
-  let activeIndex = ref(-1); // 当前激活的 icon 索引
+  let dataInit = reactive([icon.mindmap, icon.chat, icon.code, icon.study])
+  let data = ref([...dataInit]) // 使用 ref 创建响应式对象
+  let activeIndex = ref(-1) // 当前激活的 icon 索引
   function reset() {
-    data.value = dataInit.slice();
+    data.value = dataInit.slice()
   }
   function activate(index: number = -1) {
-    reset();
+    reset()
     if (index === -1) {
-      return data;
+      return data
     }
-    activeIndex.value = index;
+    activeIndex.value = index
     switch (index) {
       case 0:
-        data.value[0] = icon.mindmapActive;
-        break;
+        data.value[0] = icon.mindmapActive
+        break
       case 1:
-        data.value[1] = icon.chatActive;
-        break;
+        data.value[1] = icon.chatActive
+        break
       case 2:
-        data.value[2] = icon.codeActive;
-        break;
+        data.value[2] = icon.codeActive
+        break
       case 3:
-        data.value[3] = icon.studyActive;
-        break;
+        data.value[3] = icon.studyActive
+        break
     }
-    return data.value;
+    return data.value
   }
   function get() {
-    return data.value;
+    return data.value
   }
-  return { activate, reset, get, activeIndex };
-};
-const myIcons = icons();
+  return { activate, reset, get, activeIndex }
+}
+const myIcons = icons()
 // 根据当前路由初始化侧边栏图标
 {
-  show.value = false;
-  const path = router.currentRoute.value.path;
+  show.value = false
+  const path = router.currentRoute.value.path
   switch (path) {
-    case "/chat/:uuid":
-      myIcons.activate(1);
-      show.value = true;
-      break;
-    case "/knowledge/skills":
-      myIcons.activate(0);
-      break;
-    case "/program/tutor":
-      myIcons.activate(2);
-      break;
-    case "/person/study":
-      myIcons.activate(3);
-      break;
+    case '/chat/:uuid':
+      myIcons.activate(1)
+      show.value = true
+      break
+    case '/knowledge/skills':
+      myIcons.activate(0)
+      break
+    case '/program/tutor':
+      myIcons.activate(2)
+      break
+    case '/person/study':
+      myIcons.activate(3)
+      break
     default:
-      myIcons.activate(1); // 默认值
-      show.value = true;
-      break;
+      myIcons.activate(1) // 默认值
+      show.value = true
+      break
   }
 }
-const sidebarIcons = computed(() => myIcons.get());
+const sidebarIcons = computed(() => myIcons.get())
 
 function chat() {
-  show.value = true;
-  myIcons.activate(1);
-  router.push(`/chat/${uuid}`);
+  show.value = true
+  myIcons.activate(1)
+  router.push(`/chat/${uuid}`)
 }
 
 function goToKnowledgeGraph() {
-  show.value = false;
-  myIcons.activate(0);
-  router.push("/knowledge/skills");
+  show.value = false
+  myIcons.activate(0)
+  router.push('/knowledge/skills')
 }
 
 function goTopersonStudy() {
-  show.value = false;
-  myIcons.activate(3);
-  router.push("/person/study");
+  show.value = false
+  myIcons.activate(3)
+  router.push('/person/study')
 }
 
 function goToProgram() {
-  show.value = false;
-  myIcons.activate(2);
-  router.push("/program/tutor");
+  show.value = false
+  myIcons.activate(2)
+  router.push('/program/tutor')
 }
 
 function goHome() {
-  router.push("/");
+  router.push('/')
 }
 
 function handleAdd() {
-  loading.value = true; // 开始加载
+  loading.value = true // 开始加载
   newChat()
     .then((res) => {
       if (res.status === 200) {
-        message.info(t('addSuccess'), { duration: 5000 });
+        message.info(t('addSuccess'), { duration: 5000 })
         chatStore.addHistory({
           title: t('qaTitle') + res.data.data,
           uuid: res.data.data,
           isEdit: false,
-        });
-        localStorage.setItem("active-uuid", res.data.data);
+        })
+        localStorage.setItem('active-uuid', res.data.data)
       } else {
         // 更新失败
       }
     })
     .catch((err) => {
-      console.error("新增失败:", err);
+      console.error('新增失败:', err)
     })
     .finally(() => {
-      loading.value = false; // 结束加载
-    });
-  if (isMobile.value) appStore.setSiderCollapsed(true);
+      loading.value = false // 结束加载
+    })
+  if (isMobile.value) appStore.setSiderCollapsed(true)
 }
 
 function handleUpdateCollapsed() {
-  appStore.setSiderCollapsed(!collapsed.value);
+  appStore.setSiderCollapsed(!collapsed.value)
 }
 import i18n, { t as globalT, setLocale } from '@/locales'
 
@@ -157,42 +153,47 @@ const toggleLanguage = () => {
   appStore.setLanguage?.(newLocale) // ✅ 可选：更新 Pinia 中的语言状态
 }
 
-
 const getMobileClass = computed<CSSProperties>(() => {
   if (isMobile.value) {
     return {
-      position: "fixed",
+      position: 'fixed',
       zIndex: 50,
-    };
+    }
   }
-  return {};
-});
+  return {}
+})
 
 const mobileSafeArea = computed(() => {
   if (isMobile.value) {
     return {
-      paddingBottom: "env(safe-area-inset-bottom)",
-    };
+      paddingBottom: 'env(safe-area-inset-bottom)',
+    }
   }
-  return {};
-});
+  return {}
+})
 
 watch(
   isMobile,
   (val) => {
-    appStore.setSiderCollapsed(val);
+    appStore.setSiderCollapsed(val)
   },
   {
     immediate: true,
-    flush: "post",
-  }
-);
+    flush: 'post',
+  },
+)
 </script>
 
 <template>
   <NLayout has-sider sider-placement="left">
-    <NLayoutSider :collapsed="false" :width="80" position="absolute" bordered :style="getMobileClass"
-      @update-collapsed="handleUpdateCollapsed">
+    <NLayoutSider
+      :collapsed="false"
+      :width="80"
+      position="absolute"
+      bordered
+      :style="getMobileClass"
+      @update-collapsed="handleUpdateCollapsed"
+    >
       <div class="flex flex-col h-full" :style="mobileSafeArea">
         <main class="flex flex-col flex-1 min-h-0">
           <!-- 侧边栏内容 -->
@@ -206,19 +207,28 @@ watch(
             <div class="side-content">
               <div class="side-item" @click="goToKnowledgeGraph">
                 <img :src="sidebarIcons[0]" />
-                <text :class="{ activeText: myIcons.activeIndex.value === 0 }">{{ t('knowledgeGraph') }}</text>
+                <text
+                  :class="{ activeText: myIcons.activeIndex.value === 0 }"
+                  >{{ t('knowledgeGraph') }}</text
+                >
               </div>
               <div class="side-item" @click="chat">
                 <img :src="sidebarIcons[1]" />
-                <text :class="{ activeText: myIcons.activeIndex.value === 1 }">{{ t('knowledgeQA') }}</text>
+                <text
+                  :class="{ activeText: myIcons.activeIndex.value === 1 }"
+                  >{{ t('knowledgeQA') }}</text
+                >
               </div>
-              <div class="side-item" @click="goToProgram">
-                <img :src="sidebarIcons[2]" />
-                <text :class="{ activeText: myIcons.activeIndex.value === 2 }">{{ t('programmingTutor') }}</text>
-              </div>
+              <!-- <div class="side-item" @click="goToProgram">
+                  <img :src="sidebarIcons[2]" />
+                  <text :class="{ activeText: myIcons.activeIndex.value === 2 }">{{ t('programmingTutor') }}</text>
+                </div> -->
               <div class="side-item" @click="goTopersonStudy">
                 <img :src="sidebarIcons[3]" />
-                <text :class="{ activeText: myIcons.activeIndex.value === 3 }">{{ t('personalStudy') }}</text>
+                <text
+                  :class="{ activeText: myIcons.activeIndex.value === 3 }"
+                  >{{ t('personalStudy') }}</text
+                >
               </div>
               <div class="side-item" @click="toggleLanguage">
                 🌐
@@ -232,18 +242,34 @@ watch(
     </NLayoutSider>
 
     <template v-if="isMobile">
-      <div v-show="!collapsed" class="fixed inset-0 z-40 w-full h-full bg-black/40" @click="handleUpdateCollapsed" />
+      <div
+        v-show="!collapsed"
+        class="fixed inset-0 z-40 w-full h-full bg-black/40"
+        @click="handleUpdateCollapsed"
+      />
     </template>
 
     <!-- 加载指示器 -->
-    <div v-if="loading" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div
+      v-if="loading"
+      class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+    >
       <NSpin size="large" />
     </div>
 
-    <NLayoutSider v-if="show" :collapsed-width="0" :width="200" collapse-mode="transform"
-      :show-trigger="isMobile ? false : 'arrow-circle'" bordered :style="getMobileClass">
+    <NLayoutSider
+      v-if="show"
+      :collapsed-width="0"
+      :width="200"
+      collapse-mode="transform"
+      :show-trigger="isMobile ? false : 'arrow-circle'"
+      bordered
+      :style="getMobileClass"
+    >
       <div class="chat-history-container" :style="mobileSafeArea">
-        <button class="add-chat-btn" @click="handleAdd">{{ t('addQuestion') }}</button>
+        <button class="add-chat-btn" @click="handleAdd">
+          {{ t('addQuestion') }}
+        </button>
         <div>
           <List />
         </div>

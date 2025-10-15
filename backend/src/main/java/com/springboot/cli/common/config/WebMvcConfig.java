@@ -7,13 +7,15 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import javax.annotation.Resource;
+
 /**
  * 配置拦截器路径
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Autowired
+    @Resource
     private AppProperties appProperties;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -21,7 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 // 拦截的路径
                 .addPathPatterns("/**")
                 // 开放的路径
-                .excludePathPatterns("/login/**", "/token/validate", "/student/register","/student/login", "/login", "/register","register");
+                .excludePathPatterns("/login/**", "/token/validate", "/student/register","/student/login", "/login", "/register","register","/python/login/**", "/python/token/validate", "/python/student/register","/python/student/login", "/python/login", "/python/register","/python/register");
     }
 
     /**
@@ -30,7 +32,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3002","http://localhost:8000","http://localhost:8080" ,"http://117.72.59.61")
+                .allowedOrigins("http://localhost:3003","http://localhost:8000","http://localhost:8080" ,"http://117.72.59.61")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

@@ -11,6 +11,7 @@ import com.springboot.cli.model.VO.ChatVO;
 import com.springboot.cli.repository.impl.ChatRepository;
 import com.springboot.cli.repository.impl.HistoryRepository;
 import com.springboot.cli.service.ChatService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +22,10 @@ import java.util.List;
 
 @Service
 public class ChatServiceImpl implements ChatService {
-    @Resource
+    @Autowired
     ChatRepository chatRepository;
 
-    @Resource
+    @Autowired
     HistoryRepository historyRepository;
 
     @Override

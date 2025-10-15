@@ -6,10 +6,14 @@
         <span class="title">SageJavon</span>
       </div>
       <div class="nav">
-        <div class="navItem" @click="jumpTop" :class="{ active: activeTab === 'home' }">
+        <div
+          class="navItem"
+          @click="jumpTop"
+          :class="{ active: activeTab === 'home' }"
+        >
           {{ t('home') }}
         </div>
-        <div class="navItem" @click="useOnline">
+        <!-- <div class="navItem" @click="useOnline">
           {{ t('online') }}
         </div>
         <div class="navItem" @click="jumpClient" :class="{ active: activeTab === 'client' }">
@@ -20,7 +24,7 @@
         </div>
         <div class="navItem" @click="goToGitHub">
           {{ t('github') }}
-        </div>
+        </div> -->
         <!-- 🌐 语言切换按钮 -->
         <div class="navItem" @click="toggleLang">
           {{ currentLocale === 'zh-CN' ? 'EN' : '中' }}
@@ -155,11 +159,11 @@ const jumpClient = () => {
         }
 
         &.active {
-          color: #FC6868;
+          color: #fc6868;
         }
 
         &:hover {
-          color: #FC6868;
+          color: #fc6868;
         }
 
         a {
@@ -167,7 +171,7 @@ const jumpClient = () => {
           color: #828f99;
 
           &:hover {
-            color: #FC6868;
+            color: #fc6868;
           }
         }
       }
