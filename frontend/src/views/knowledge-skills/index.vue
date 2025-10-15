@@ -181,8 +181,7 @@ const getJavaStudyAdviceFromGLM = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization:
-            'Bearer 6e5294aa63fa49d186f994c849e1def8.detSDLFawmdzZKV2',
+          Authorization: 'Bearer ' + process.env.API_KEY,
         },
         body: JSON.stringify({
           model: 'glm-4.5-flash',
