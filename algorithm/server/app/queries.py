@@ -402,7 +402,7 @@ def smart_query():
         response = generate_answer(query, user_id, False)
         if hasattr(response, 'usage'):
             logger.warning(
-                f"[Track token consumption] for smart_query: '{query}', usage={response.usage}")
+                f"[Track token consumption] for smart_query: '{query}', usage={response.usage}, text={content}")
         answer = response.choices[0].message.content
 
         # logger.warning(f"The answer is:\n{answer}")
