@@ -29,7 +29,12 @@
             >
               <strong>{{ node.text }}</strong>
               <div
-                style="font-size: 12px; color: #b0bec5; margin-top: 5px; max-width: 120px"
+                style="
+                  font-size: 12px;
+                  color: #b0bec5;
+                  margin-top: 5px;
+                  max-width: 120px;
+                "
               >
                 {{ node.data?.explanation }}
               </div>
@@ -39,12 +44,15 @@
       </div>
 
       <!-- 右侧卡片列表展示 -->
-      <div style="flex: 1; padding: 24px; overflow-y: auto; background: #f9fafb">
+      <div
+        style="flex: 1; padding: 24px; overflow-y: auto; background: #f9fafb"
+      >
         <div style="font-size: 20px; font-weight: bold; margin-bottom: 12px">
           📊 Java Knowledge Graph: Mastery Overview
         </div>
         <div style="font-size: 14px; color: #607d8b; margin-bottom: 20px">
-          Each node represents a Java concept. The size of the node indicates your mastery level — larger means better.
+          Each node represents a Java concept. The size of the node indicates
+          your mastery level — larger means better.
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px">
@@ -56,7 +64,8 @@
               borderRadius: '8px',
               padding: '16px',
               boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-              border: node.id === selectedNode?.id ? '2px solid #4CAF50' : 'none',
+              border:
+                node.id === selectedNode?.id ? '2px solid #4CAF50' : 'none',
             }"
           >
             <div style="font-weight: bold; color: #2e3a47; font-size: 16px">
@@ -67,11 +76,18 @@
               <strong>{{ Math.round((node.width / 2000) * 100) }}</strong> / 100
             </div>
             <div
-              style="margin-top: 8px; background: #eceff1; border-radius: 4px; overflow: hidden; height: 6px"
+              style="
+                margin-top: 8px;
+                background: #eceff1;
+                border-radius: 4px;
+                overflow: hidden;
+                height: 6px;
+              "
             >
               <div
                 :style="{
-                  width: Math.min(100, Math.round((node.width / 2000) * 100)) + '%',
+                  width:
+                    Math.min(100, Math.round((node.width / 2000) * 100)) + '%',
                   height: '100%',
                   background: masteryLevelColor(node.width),
                 }"
@@ -82,7 +98,14 @@
 
         <button
           @click="exportPDF"
-          style="margin-top: 20px; padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 5px"
+          style="
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+          "
         >
           Export Report as PDF
         </button>
@@ -121,8 +144,8 @@ const graphOptions: RGOptions = {
   allowSwitchJunctionPoint: true,
   defaultLineShape: 1,
   layout: {
-    layoutName: 'force',       // ✅ 自动布局模式
-    defSpringLen: 180,         // 节点间距
+    layoutName: 'force', // ✅ 自动布局模式
+    defSpringLen: 180, // 节点间距
     maxLayoutTimes: 1000,
   },
   defaultLineColor: '#90A4AE',
@@ -147,25 +170,34 @@ const masteryLevelColor = (score: number) => {
   else return '#EF5350'
 }
 
-const getJavaStudyAdviceFromGLM = async (masteryData: string): Promise<string> => {
+const getJavaStudyAdviceFromGLM = async (
+  masteryData: string,
+): Promise<string> => {
   const prompt = `The following list contains a student's mastery scores on various Java topics (full score: 160)...\n\n${masteryData}`
   try {
-    const res = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer 6e5294aa63fa49d186f994c849e1def8.detSDLFawmdzZKV2',
+    const res = await fetch(
+      'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:
+            'Bearer 6e5294aa63fa49d186f994c849e1def8.detSDLFawmdzZKV2',
+        },
+        body: JSON.stringify({
+          model: 'glm-4.5-flash',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 2048,
+          stream: false,
+        }),
       },
-      body: JSON.stringify({
-        model: 'glm-4-flashx',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 2048,
-        stream: false,
-      }),
-    })
+    )
     const result = await res.json()
-    return result?.choices?.[0]?.message?.content || '⚠️ No content returned from model.'
+    return (
+      result?.choices?.[0]?.message?.content ||
+      '⚠️ No content returned from model.'
+    )
   } catch (e) {
     return '⚠️ Failed to fetch AI suggestions.'
   }
@@ -176,7 +208,9 @@ const exportPDF = async () => {
     .map((node) => `- ${node.text}: ${Math.round(node.width)} / 2000`)
     .join('\n')
   const markdown = await getJavaStudyAdviceFromGLM(studentData)
-  const html = marked(`# 📘 Java Knowledge Report\n\n## 📌 AI-Powered Learning Suggestions\n\n${markdown}`)
+  const html = marked(
+    `# 📘 Java Knowledge Report\n\n## 📌 AI-Powered Learning Suggestions\n\n${markdown}`,
+  )
   const container = document.createElement('div')
   container.innerHTML = html
   container.style.padding = '20px'

@@ -2,13 +2,27 @@
   <div class="person-study-container">
     <QuestionHover :index="1" />
     <div class="card choice-question">
-      <MainCard :image="iconSelect" :title="t('choiceTitle')" :description="choiceDescription" @click="navigateChoice"></MainCard>
+      <MainCard
+        :image="iconSelect"
+        :title="t('choiceTitle')"
+        :description="choiceDescription"
+        @click="navigateChoice"
+      ></MainCard>
     </div>
     <div class="card code-question">
-      <MainCard :image="iconCode" :title="t('codeTitle')" :description="codeDescription" @click="navigateProgram"></MainCard>
+      <MainCard
+        :image="iconCode"
+        :title="t('codeTitle')"
+        :description="codeDescription"
+        @click="navigateProgram"
+      ></MainCard>
     </div>
     <div class="card history" @click="navigateHistory">
-      <MainCard :image="iconHistory" :title="t('historyTitle')" :description="historyDescription"></MainCard>
+      <MainCard
+        :image="iconHistory"
+        :title="t('historyTitle')"
+        :description="historyDescription"
+      ></MainCard>
     </div>
     <div class="card hot-question">
       <HotQuestion />
@@ -23,7 +37,14 @@
       <div class="statistics-row">
         <div class="statistics-col-4">
           <div
-            style="display: flex; flex-direction: row; column-gap: 0.8rem; align-items: center; justify-content: center;">
+            style="
+              display: flex;
+              flex-direction: row;
+              column-gap: 0.8rem;
+              align-items: center;
+              justify-content: center;
+            "
+          >
             <img class="statistics-img" :src="iconDays" />
             <div class="statistics-text">{{ t('consecutiveDays') }}</div>
           </div>
@@ -32,7 +53,14 @@
         <div class="statistics-col-4">
           <div class="statistics-number">{{ solveQuestions }}</div>
           <div
-            style="display: flex; flex-direction: row; column-gap: 0.8rem; align-items: center; justify-content: center;">
+            style="
+              display: flex;
+              flex-direction: row;
+              column-gap: 0.8rem;
+              align-items: center;
+              justify-content: center;
+            "
+          >
             <div class="statistics-text">{{ t('completedQuestions') }}</div>
             <img class="statistics-img" :src="iconComplete" />
           </div>
@@ -43,34 +71,33 @@
       <Echart />
     </div>
   </div>
-
 </template>
 
 <script setup>
 import QuestionHover from '@/components/question-list/QuestionHover.vue'
-import { ref, onMounted } from 'vue';
-import MainCard from "@/views/person-study/components/MainCard.vue";
-import DailyRecoCard from "@/views/person-study/components/DailyRecoCard.vue";
-import iconSelect from "./images/select-question.png"
-import iconCode from "./images/code-question.png"
-import iconHistory from "./images/history.png"
-import iconDays from "./images/days.png"
-import iconComplete from "./images/complete-exercises.png"
+import { ref, onMounted } from 'vue'
+import MainCard from '@/views/person-study/components/MainCard.vue'
+import DailyRecoCard from '@/views/person-study/components/DailyRecoCard.vue'
+import iconSelect from './images/select-question.png'
+import iconCode from './images/code-question.png'
+import iconHistory from './images/history.png'
+import iconDays from './images/days.png'
+import iconComplete from './images/complete-exercises.png'
 import { useRouter } from 'vue-router'
-import Echart from "./components/Echart.vue"
-import HotQuestion from "./components/HotQuestion.vue"
-import HistoryRecord from "./components/HistoryRecord.vue"
-import { fetchPersonStudy } from './api/person-study';
+import Echart from './components/Echart.vue'
+import HotQuestion from './components/HotQuestion.vue'
+import HistoryRecord from './components/HistoryRecord.vue'
+import { fetchPersonStudy } from './api/person-study'
 import { t as globalT } from '@/locales'
 
 const t = globalT
 
-//响应数据初始态 
-const choiceDescription = ref('加载中...');
-const codeDescription = ref('加载中...');
-const historyDescription = ref('加载中...');
-const solveDays = ref('加载中...');
-const solveQuestions = ref('加载中...');
+//响应数据初始态
+const choiceDescription = ref('加载中...')
+const codeDescription = ref('加载中...')
+const historyDescription = ref('加载中...')
+const solveDays = ref('加载中...')
+const solveQuestions = ref('加载中...')
 
 const router = useRouter()
 function navigateProgram() {
@@ -92,37 +119,44 @@ function navigateHistory() {
 
 onMounted(async () => {
   try {
-    const data = await fetchPersonStudy();
-    choiceDescription.value = t('choiceQuestionCount', { count: data.codeNumber });;
-    codeDescription.value = t('codeQuestionCount', { count: data.selectNumber });
-    historyDescription.value = t('historyCount', { count: data.solveQuestions });
-    solveDays.value = padNumber(data.solveDays);
-    solveQuestions.value = padNumber(data.solveQuestions);
+    const data = await fetchPersonStudy()
+    choiceDescription.value = data.codeNumber + '道编程题'
+    codeDescription.value = data.selectNumber + '道选择题'
+    historyDescription.value = data.solveQuestions + '条历史记录'
+    solveDays.value = padNumber(data.solveDays)
+    solveQuestions.value = padNumber(data.solveQuestions)
   } catch (error) {
-    choiceDescription.value = t('loadFailed');
-    codeDescription.value = t('loadFailed');
-    historyDescription.value = t('loadFailed');
-    solveDays.value = t('loadFailed');
-    solveQuestions.value = t('loadFailed');
+    choiceDescription.value = t('loadFailed')
+    codeDescription.value = t('loadFailed')
+    historyDescription.value = t('loadFailed')
+    solveDays.value = t('loadFailed')
+    solveQuestions.value = t('loadFailed')
   }
-});
+})
 
 function padNumber(num) {
-  const numStr = num.toString();
+  const numStr = num.toString()
   if (numStr.length >= 4) {
-    return numStr;
+    return numStr
   }
-  return numStr.padStart(4, '0');
+  return numStr.padStart(4, '0')
 }
-
 </script>
 
 <style scoped>
 * {
   --theme-blue: #052350;
   --card-radius: 16px;
-  --card-background-color: linear-gradient(108.33deg, #0A368D 0%, #052B75 101.33%);
-  --daily-card-background-clolor: linear-gradient(90deg, #074CB5 0%, #0CD089 100%);
+  --card-background-color: linear-gradient(
+    108.33deg,
+    #0a368d 0%,
+    #052b75 101.33%
+  );
+  --daily-card-background-clolor: linear-gradient(
+    90deg,
+    #074cb5 0%,
+    #0cd089 100%
+  );
 }
 
 .person-study-container {
@@ -202,10 +236,10 @@ function padNumber(num) {
 }
 
 .statistics-number {
-  font-family: "Legend";
+  font-family: 'Legend';
   font-weight: bold;
   font-size: 36px;
-  background: linear-gradient(78.09deg, #1E7AFF -10.56%, #15FFAC 134.74%);
+  background: linear-gradient(78.09deg, #1e7aff -10.56%, #15ffac 134.74%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
