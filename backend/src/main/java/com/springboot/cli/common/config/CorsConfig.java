@@ -2,8 +2,7 @@ package com.springboot.cli.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -36,7 +35,7 @@ public class CorsConfig {
         source.registerCorsConfiguration("/**", corsConfiguration);
 
         // 创建 CORS 过滤器
-        CorsFilter corsFilter = new CorsFilter((CorsConfigurationSource) source);
+        CorsFilter corsFilter = new CorsFilter(source);
 
         // 注册过滤器
         FilterRegistrationBean<CorsFilter> filterRegistrationBean = new FilterRegistrationBean<>(corsFilter);
