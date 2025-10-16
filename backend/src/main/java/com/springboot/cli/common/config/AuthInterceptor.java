@@ -28,8 +28,12 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setHeader("Access-Control-Allow-Origin", "http://117.72.59.61");  // 允许的前端地址
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
+            response.setHeader("Access-Control-Allow-Headers", "Content-Type, token");  // 允许的请求头
+            response.setHeader("Access-Control-Allow-Credentials", "true");  // 允许携带凭证
             response.setStatus(HttpServletResponse.SC_OK);
-            return true;
+            return true;  // 允许继续请求
         }
 
         System.out.println("请求路径：" + request.getRequestURI());
