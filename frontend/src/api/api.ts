@@ -1,4 +1,3 @@
-import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 
 import { useAuthStore, useChatStore, useSettingStore } from '@/store'
 
