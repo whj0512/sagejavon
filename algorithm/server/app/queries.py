@@ -245,54 +245,54 @@ Assistant: I'm here to assist you with information related to `{bot_topic}`. If 
     else:
         top_k = RECALL_TOP_K
 
-    results = get_recall_documents(
-        query, adjust_query, top_k, user_id, MIN_RELEVANCE_SCORE)
+    # results = get_recall_documents(
+        # query, adjust_query, top_k, user_id, MIN_RELEVANCE_SCORE)
 
-    filter_context = ''
+    # filter_context = ''
     # Build the context with filtered documents, showing relevant documents
-    if USE_RERANKING and results:
-        # Rerank the documents
-        rerank_results = rerank_documents(query, results)
-        if rerank_results:
-            filter_context = "\n--------------------\n".join([
-                f"Citation URL: {doc['metadata']['source']}\nDocument Content: {doc['text']}"
-                for doc in rerank_results[:RECALL_TOP_K]
-            ])
-    else:
-        if len(results) > 1:
-            results.sort(key=lambda x: x[1], reverse=True)
+#     if USE_RERANKING and results:
+#         # Rerank the documents
+#         rerank_results = rerank_documents(query, results)
+#         if rerank_results:
+#             filter_context = "\n--------------------\n".join([
+#                 f"Citation URL: {doc['metadata']['source']}\nDocument Content: {doc['text']}"
+#                 for doc in rerank_results[:RECALL_TOP_K]
+#             ])
+#     else:
+#         if len(results) > 1:
+#             results.sort(key=lambda x: x[1], reverse=True)
 
-        if results:
-            filter_context = "\n--------------------\n".join([
-                f"Citation URL: {doc.metadata['source']}\nDocument Content: {doc.page_content}"
-                for doc, score in results[:RECALL_TOP_K]
-            ])
+#         if results:
+#             filter_context = "\n--------------------\n".join([
+#                 f"Citation URL: {doc.metadata['source']}\nDocument Content: {doc.page_content}"
+#                 for doc, score in results[:RECALL_TOP_K]
+#             ])
 
-    if filter_context:
-        context = f"""Chat History (Sorted by request time from most recent to oldest):
-{history_context}
+#     if filter_context:
+#         context = f"""Chat History (Sorted by request time from most recent to oldest):
+# {history_context}
 
-Documents Information:
-{filter_context}
-"""
-    else:
-        # When no directly related documents are found, provide standard friendly response and guidance
-        fallback_answer = f"""No documents found directly related to the current question!
-Please provide the response in the following format and ensure that the 'answer' part is translated into the same language as the user's question:
+# Documents Information:
+# {filter_context}
+# """
+#     else:
+#         # When no directly related documents are found, provide standard friendly response and guidance
+#         fallback_answer = f"""No documents found directly related to the current question!
+# Please provide the response in the following format and ensure that the 'answer' part is translated into the same language as the user's question:
 
-"I'm sorry, I cannot find a specific answer about '{query}' from the information provided. I'm here to assist you with information related to `{bot_topic}`. If you have any specific questions about our services or need help, feel free to ask, and I'll do my best to provide you with accurate and relevant answers."
+# "I'm sorry, I cannot find a specific answer about '{query}' from the information provided. I'm here to assist you with information related to `{bot_topic}`. If you have any specific questions about our services or need help, feel free to ask, and I'll do my best to provide you with accurate and relevant answers."
 
-Please ensure:
-- If the user's question is a straightforward greeting, the assistant will offer a friendly standard response, guiding users to seek information or services related to `{bot_topic}`. Don't start with "I'm sorry, I cannot find a specific answer about '{query}' from the information provided.".
-- Maintain the context and meaning of the original message.
-- Respond in the language of the original question; for instance, reply in Chinese if the question was asked in Chinese and in English if it was asked in English!"""
+# Please ensure:
+# - If the user's question is a straightforward greeting, the assistant will offer a friendly standard response, guiding users to seek information or services related to `{bot_topic}`. Don't start with "I'm sorry, I cannot find a specific answer about '{query}' from the information provided.".
+# - Maintain the context and meaning of the original message.
+# - Respond in the language of the original question; for instance, reply in Chinese if the question was asked in Chinese and in English if it was asked in English!"""
 
-        context = f"""Chat History (Sorted by request time from most recent to oldest):
-{history_context}
+#         context = f"""Chat History (Sorted by request time from most recent to oldest):
+# {history_context}
 
-Documents Information:
-{fallback_answer}
-"""
+# Documents Information:
+# {fallback_answer}
+# """
 
     if not is_streaming:
         answer_format_prompt = '''**Expected Response Format:**
