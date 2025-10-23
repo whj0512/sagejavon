@@ -141,13 +141,13 @@ async function onConversation() {
     if (response.status === 500) {
       addChat(+localStorage.getItem('active-uuid'), {
         dateTime: new Date().toLocaleString(),
-        text: '账户已经欠费，请联系工作人员进行充值！',
+        text: '服务器繁忙，请稍候再试，人少的时候再用，或者先去做做题吧',
         inversion: false,
         error: true,
         loading: false,
         conversationOptions: null,
         requestOptions: {
-          prompt: '账户已经欠费，请联系工作人员进行充值！',
+          prompt: '服务器繁忙，请稍候再试，人少的时候再用，或者先去做做题吧',
           options: {},
         },
       })
