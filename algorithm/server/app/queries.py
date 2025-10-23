@@ -314,9 +314,6 @@ Base on the Chat History and the provided context. First, analyze the provided c
 
 **Question:** {query}
 
-**Context for Answering the Question:**
-{context}
-
 **Response Requirements:**
 - Don't repeat the question at the beginning.
 - If unsure about the answer, proactively seek clarification.
