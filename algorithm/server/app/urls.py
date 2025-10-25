@@ -485,7 +485,7 @@ def score():
     print(data)
     stu_code = data['code']
     problem = data['question']
-    # 题目id
+
     if stu_code is None:
         print("代码为空，不存在！")
         return {
@@ -494,20 +494,32 @@ def score():
             'data': {}
         }
     else:
-        # glm-4评分
         print("进行评分！！")
-        # print(stu_code)
         score_results = evaluate(problem=problem, output=stu_code)
         score_json = extract_json_with_regex(score_results)
+
+        # Debugging the score_json
         print("score json:", score_json)
-        score = json.loads(score_json)
-        suggestion = suggest(
-            problem=problem, output=stu_code, score=score_results)
-        # e_dict = {
-        #     'usefulness':score['usefulness'],
-        #     'functionalCorrectness':score['functionalCorrectness'],
-        #     'codingStyle':score['codingStyle'],
-        #     'suggestion':suggestion }
+
+        if not score_json:
+            print("score_json is empty or invalid!")
+            return {
+                'code': 0,
+                'msg': 'Error: Invalid score JSON',
+                'data': {}
+            }
+
+        try:
+            score = json.loads(score_json)
+        except json.JSONDecodeError as e:
+            print(f"JSON Decode Error: {e}")
+            return {
+                'code': 0,
+                'msg': 'Error: Failed to decode JSON',
+                'data': {}
+            }
+
+        suggestion = suggest(problem=problem, output=stu_code, score=score_results)
 
         return {
             'code': 1,
@@ -520,7 +532,6 @@ def score():
             }
         }
 
-    # 存给数据库
 
 
 # 调用glm-4评分
