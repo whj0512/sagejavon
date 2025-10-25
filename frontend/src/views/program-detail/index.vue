@@ -1,5 +1,6 @@
 <template>
   <div class="full-height">
+    <BackToHome />
     <QuestionHover :index="2" />
     <PanelBox class="program-detail-container">
       <template #question>
@@ -54,11 +55,19 @@
 
           <!-- Feedback Buttons -->
           <div class="feedback-buttons">
-            <button @click="toggleLike" :class="{ liked: isLiked }" class="feedback-button">
+            <button
+              @click="toggleLike"
+              :class="{ liked: isLiked }"
+              class="feedback-button"
+            >
               <span class="icon">👍</span>
               <span>{{ t('likeButton') }}</span>
             </button>
-            <button @click="toggleDislike" :class="{ disliked: isDisliked }" class="feedback-button">
+            <button
+              @click="toggleDislike"
+              :class="{ disliked: isDisliked }"
+              class="feedback-button"
+            >
               <span class="icon">👎</span>
               <span>{{ t('dislikeButton') }}</span>
             </button>
@@ -119,7 +128,7 @@
       :segmented="segmented"
     >
       Correct Answer:
-      {{ correctAnswer == null ? "Not Available" : correctAnswer }}
+      {{ correctAnswer == null ? 'Not Available' : correctAnswer }}
       <v-md-preview :text="suggestion"></v-md-preview>
     </NModal>
   </div>
@@ -127,61 +136,62 @@
 
 <script setup lang="ts">
 import QuestionHover from '@/components/question-list/QuestionHover.vue'
-import PanelBox from "../panel-box/index.vue";
-import { ref, onMounted } from "vue";
-import * as monaco from "monaco-editor";
-import monacoEditor from "./components/monacoEditor.vue";
-import DragBall from "./components/DragBall.vue";
-import { useRoute } from "vue-router";
-import { programDetails } from "./api/program_detail";
-import { NButton, NModal } from "naive-ui";
-import { questionCode } from "./api/question_code";
-import ModalDialog from "./components/ModalDialog.vue";
-import historyList from "@/components/exercise/history-list.vue";
-import { recordList } from "./api/record_list";
-import { reviewQuestion } from './api/question_review';
-import { codeRecordDetail } from "@/components/exercise/api/code_record_detail";
-import { t as globalT} from '@/locales'
+import PanelBox from '../panel-box/index.vue'
+import { ref, onMounted } from 'vue'
+import * as monaco from 'monaco-editor'
+import monacoEditor from './components/monacoEditor.vue'
+import DragBall from './components/DragBall.vue'
+import BackToHome from '@/components/ReturnHome/ReturnHome.vue'
+import { useRoute } from 'vue-router'
+import { programDetails } from './api/program_detail'
+import { NButton, NModal } from 'naive-ui'
+import { questionCode } from './api/question_code'
+import ModalDialog from './components/ModalDialog.vue'
+import historyList from '@/components/exercise/history-list.vue'
+import { recordList } from './api/record_list'
+import { reviewQuestion } from './api/question_review'
+import { codeRecordDetail } from '@/components/exercise/api/code_record_detail'
+import { t as globalT } from '@/locales'
 
 const t = globalT
 
 const bodyStyle = ref({
-  width: "700px",
-});
+  width: '700px',
+})
 const segmented = ref({
-  content: "soft",
-  footer: "soft",
-});
-const showModal = ref(false);
+  content: 'soft',
+  footer: 'soft',
+})
+const showModal = ref(false)
 
-const route = useRoute();
-const questionId = ref(route.query.id);
-console.log(questionId.value);
+const route = useRoute()
+const questionId = ref(route.query.id)
+console.log(questionId.value)
 
-const language = ref("java");
+const language = ref('java')
 const editorMounted = (editor: monaco.editor.IStandaloneCodeEditor) => {
-  console.log("editor实例加载完成", editor);
-};
+  console.log('editor实例加载完成', editor)
+}
 
 interface KnowledgeConcept {
-  knowledgeId: number;
-  knowledge: string;
+  knowledgeId: number
+  knowledge: string
 }
 
 export interface ExerciseRecordList {
-  difficulty: number;
-  exerciseId: number;
-  knowledgeConcept: KnowledgeConcept[];
-  questionText: string;
-  recordId: number;
-  score: number;
-  submitTime: string;
-  type: number;
+  difficulty: number
+  exerciseId: number
+  knowledgeConcept: KnowledgeConcept[]
+  questionText: string
+  recordId: number
+  score: number
+  submitTime: string
+  type: number
 }
 
-const records = ref<ExerciseRecordList[]>([]);
-const correctAnswer = ref("");
-const correct = ref("");
+const records = ref<ExerciseRecordList[]>([])
+const correctAnswer = ref('')
+const correct = ref('')
 // const response = await recordList(Number(questionId.value));
 // console.log(response)
 // records.value = response.data.data
@@ -189,171 +199,169 @@ const correct = ref("");
 
 onMounted(async () => {
   try {
-    const res = await recordList(questionId.value);
-    console.log(res);
-    records.value = res.data.data;
+    const res = await recordList(questionId.value)
+    console.log(res)
+    records.value = res.data.data
   } catch (error) {
-    console.error("获取记录失败:", error);
+    console.error('获取记录失败:', error)
   }
 
   try {
-    const response = await codeRecordDetail(questionId.value);
-    console.log(response);
-    correct.value = response.data.data.correctAnswer;
+    const response = await codeRecordDetail(questionId.value)
+    console.log(response)
+    correct.value = response.data.data.correctAnswer
   } catch (error) {
-    console.error("获取正确答案失败:", error);
+    console.error('获取正确答案失败:', error)
   }
 
   try {
-    const programRes = await programDetails(questionId.value);
+    const programRes = await programDetails(questionId.value)
     if (programRes.status === 200) {
-      programDetail.value = programRes.data.data;
-      exerciseId.value = programDetail.value.id; // 只有在数据加载完成后才赋值
+      programDetail.value = programRes.data.data
+      exerciseId.value = programDetail.value.id // 只有在数据加载完成后才赋值
     }
   } catch (err) {
-    console.error("获取程序详情失败:", err);
+    console.error('获取程序详情失败:', err)
   }
-});
+})
 
 export interface Program {
-  difficulty: number;
+  difficulty: number
   /**
    * 题目id
    */
-  id: number;
-  knowledgeConcept: KnowledgeConcept[];
+  id: number
+  knowledgeConcept: KnowledgeConcept[]
   /**
    * 题目内容
    */
-  questionText: string;
+  questionText: string
 }
 
 export interface KnowledgeConcept {
   /**
    * 知识点
    */
-  knowledge: string;
+  knowledge: string
   /**
    * 知识点id
    */
-  knowledgeId: number;
+  knowledgeId: number
 }
 
 const getProgramDetail = async () => {
   // localStorage.removeItem('chatStorage')
 
   try {
-    const res = await programDetails(questionId.value); // 假设 chatList 是一个异步请求函数
+    const res = await programDetails(questionId.value) // 假设 chatList 是一个异步请求函数
     if (res.status === 200) {
-      programDetail.value = res.data.data;
+      programDetail.value = res.data.data
     } else {
       // 更新失败
     }
   } catch (err) {
-    console.error("获取推荐列表失败:", err);
+    console.error('获取推荐列表失败:', err)
   }
-};
-getProgramDetail();
+}
+getProgramDetail()
 
-const programDetail = ref<Program>({});
+const programDetail = ref<Program>({})
 
-const activeTab = ref("content");
+const activeTab = ref('content')
 
-const code = ref("");
+const code = ref('')
 
-const score = ref(0);
+const score = ref(0)
 
-const suggestion = ref("");
+const suggestion = ref('')
 
-const isLoading = ref(false);
+const isLoading = ref(false)
 
-const submitNum = ref(0);
+const submitNum = ref(0)
 
 function submitCode(choice: string) {
-  isLoading.value = true;
-  submitNum.value += 1;
+  isLoading.value = true
+  submitNum.value += 1
   const request = {
     id: questionId.value,
     answer: code.value,
     submitNum: submitNum.value,
-  };
-  console.log(request);
+  }
+  console.log(request)
 
   questionCode(request)
     .then((response) => {
-      console.log("提交成功:", response.data);
-      score.value = response.data.data.score;
+      console.log('提交成功:', response.data)
+      score.value = response.data.data.score
       // suggestion.value = response.data.data.suggestion
-      console.log(response.data.data);
-      suggestion.value = response.data.data.suggestion;
-      correctAnswer.value = response.data.data.correctAnswer;
-      showModal.value = true;
-      isLoading.value = false;
+      console.log(response.data.data)
+      suggestion.value = response.data.data.suggestion
+      correctAnswer.value = response.data.data.correctAnswer
+      showModal.value = true
+      isLoading.value = false
     })
     .catch((error) => {
-      console.error("提交失败:", error);
+      console.error('提交失败:', error)
       // Handle error
-    });
+    })
 }
 
-
-const isLiked = ref(false);
-const isDisliked = ref(false);
+const isLiked = ref(false)
+const isDisliked = ref(false)
 async function toggleLike() {
   if (isDisliked.value) {
-    await submitReview(0); // 先取消踩
-    isDisliked.value = false;
+    await submitReview(0) // 先取消踩
+    isDisliked.value = false
   }
-  await submitReview(isLiked.value ? 0 : 1); // 点赞或取消点赞
+  await submitReview(isLiked.value ? 0 : 1) // 点赞或取消点赞
 }
 
 async function toggleDislike() {
   if (isLiked.value) {
-    await submitReview(0); // 先取消点赞
-    isLiked.value = false;
+    await submitReview(0) // 先取消点赞
+    isLiked.value = false
   }
-  await submitReview(isDisliked.value ? 0 : -1); // 踩或取消踩
+  await submitReview(isDisliked.value ? 0 : -1) // 踩或取消踩
 }
 
-
-const exerciseId = ref<number>(programDetail.value.id); // 从题目中获取ID
-
+const exerciseId = ref<number>(programDetail.value.id) // 从题目中获取ID
 
 // 提交评价
 async function submitReview(reviewType: number) {
   // 检查 exerciseId 是否定义
   if (typeof exerciseId.value === 'undefined' || exerciseId.value === null) {
-    console.error("exerciseId is undefined");
-    return;
+    console.error('exerciseId is undefined')
+    return
   }
-  if (typeof reviewType !== "number") {
-    console.error("Invalid reviewType", reviewType);
-    return;
+  if (typeof reviewType !== 'number') {
+    console.error('Invalid reviewType', reviewType)
+    return
   }
 
   try {
-    const response = await reviewQuestion(exerciseId.value.toString(), reviewType);
+    const response = await reviewQuestion(
+      exerciseId.value.toString(),
+      reviewType,
+    )
     if (response && response.status === 200) {
-      console.log("评价成功:", response.data);
+      console.log('评价成功:', response.data)
       if (reviewType === 1) {
-        isLiked.value = true;
-        isDisliked.value = false;
+        isLiked.value = true
+        isDisliked.value = false
       } else if (reviewType === -1) {
-        isLiked.value = false;
-        isDisliked.value = true;
+        isLiked.value = false
+        isDisliked.value = true
       } else {
-        isLiked.value = false;
-        isDisliked.value = false;
+        isLiked.value = false
+        isDisliked.value = false
       }
     } else {
-      console.error("评价失败:", response?.data || '未知错误');
+      console.error('评价失败:', response?.data || '未知错误')
     }
   } catch (error) {
-    console.error("提交评价失败:", error.message);
+    console.error('提交评价失败:', error.message)
   }
 }
-
-
 </script>
 
 <style scoped>
@@ -521,7 +529,7 @@ async function submitReview(reviewType: number) {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 1000; 
+  z-index: 1000;
 }
 
 .feedback-button {

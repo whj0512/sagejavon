@@ -1,21 +1,44 @@
 <template>
   <div class="full-height">
     <div class="container">
+      <BackToHome />
       <div class="tabs">
-        <div @click="activeTab = 'content'" :class="{ active: activeTab === 'content' }" class="circle-flex">
+        <div
+          @click="activeTab = 'content'"
+          :class="{ active: activeTab === 'content' }"
+          class="circle-flex"
+        >
           <div class="circle">
-            <svg t="1727006416906" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-              p-id="1530" width="200" height="200">
+            <svg
+              t="1727006416906"
+              class="icon"
+              viewBox="0 0 1024 1024"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              p-id="1530"
+              width="200"
+              height="200"
+            >
               <path
                 d="M755.2 716.8h-512v64h512V716.8z m-256-384h-256v64h256V332.8zM115.2 76.8v896h768V76.8h-768zM819.2 908.8H179.2v-768h640v768z m-225.28-384H243.2V588.8h350.72v-64z"
-                fill="#cdcdcd" p-id="1531"></path>
+                fill="#cdcdcd"
+                p-id="1531"
+              ></path>
             </svg>
           </div>
-          <div @click="activeTab = 'history'" :class="{ active: activeTab === 'history' }" class="title">
+          <div
+            @click="activeTab = 'history'"
+            :class="{ active: activeTab === 'history' }"
+            class="title"
+          >
             题目内容
           </div>
         </div>
-        <div @click="activeTab = 'history'" :class="{ active: activeTab === 'history' }" class="circle-flex">
+        <div
+          @click="activeTab = 'history'"
+          :class="{ active: activeTab === 'history' }"
+          class="circle-flex"
+        >
           <div class="circle">
             <!-- <svg t="1727007113440" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
               p-id="6521" width="200" height="200">
@@ -31,7 +54,11 @@
             历史记录
           </div> -->
         </div>
-        <div @click="activeTab = 'solution'" :class="{ active: activeTab === 'solution' }" class="circle-flex">
+        <div
+          @click="activeTab = 'solution'"
+          :class="{ active: activeTab === 'solution' }"
+          class="circle-flex"
+        >
           <!-- <div class="circle">
             <svg t="1727007243618" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
               p-id="8443" width="200" height="200">
@@ -58,64 +85,68 @@
         </div>
         <div v-if="activeTab === 'content'" class="content-navigation">
           <!-- 题目加载中 -->
-          <div v-if="isLoading" class="editor">
-            Loading...
-          </div>
+          <div v-if="isLoading" class="editor">Loading...</div>
           <!-- 题目加载完毕 -->
           <div class="question-detail" v-else-if="choiceDetail">
             <div>
               <div class="sub-section">
                 <span class="tag">{{ choiceDetail.difficulty }}</span>
-                <span class="knowledge-point" v-for="(
-                        knowledge, index
-                      ) in choiceDetail.knowledgeConcept" :key="index">
+                <span
+                  class="knowledge-point"
+                  v-for="(knowledge, index) in choiceDetail.knowledgeConcept"
+                  :key="index"
+                >
                   <i class="icon-tag"></i> {{ knowledge.knowledge }}
                 </span>
               </div>
               <v-md-preview :text="choiceDetail.questionText"></v-md-preview>
               <div class="choices">
-                <div :class="{
-                  'choices-item': true,
-                  'correct-choice':
-                    choiceDetail.choice === 'A' &&
-                    choiceDetail.score === 1,
-                  'wrong-choice':
-                    choiceDetail.choice === 'A' &&
-                    choiceDetail.score === 0,
-                }" @click="submitChoice('A')">
+                <div
+                  :class="{
+                    'choices-item': true,
+                    'correct-choice':
+                      choiceDetail.choice === 'A' && choiceDetail.score === 1,
+                    'wrong-choice':
+                      choiceDetail.choice === 'A' && choiceDetail.score === 0,
+                  }"
+                  @click="submitChoice('A')"
+                >
                   <span class="option">A.</span> {{ choiceDetail.choiceA }}
                 </div>
-                <div :class="{
-                  'choices-item': true,
-                  'correct-choice':
-                    choiceDetail.choice === 'B' &&
-                    choiceDetail.score === 1,
-                  'wrong-choice':
-                    choiceDetail.choice === 'B' &&
-                    choiceDetail.score === 0,
-                }" @click="submitChoice('B')">
+                <div
+                  :class="{
+                    'choices-item': true,
+                    'correct-choice':
+                      choiceDetail.choice === 'B' && choiceDetail.score === 1,
+                    'wrong-choice':
+                      choiceDetail.choice === 'B' && choiceDetail.score === 0,
+                  }"
+                  @click="submitChoice('B')"
+                >
                   <span class="option">B.</span> {{ choiceDetail.choiceB }}
                 </div>
-                <div :class="{
-                  'choices-item': true,
-                  'correct-choice':
-                    choiceDetail.choice === 'C' &&
-                    choiceDetail.score === 1,
-                  'wrong-choice':
-                    choiceDetail.choice === 'C' &&
-                    choiceDetail.score === 0,
-                }" @click="submitChoice('C')">
+                <div
+                  :class="{
+                    'choices-item': true,
+                    'correct-choice':
+                      choiceDetail.choice === 'C' && choiceDetail.score === 1,
+                    'wrong-choice':
+                      choiceDetail.choice === 'C' && choiceDetail.score === 0,
+                  }"
+                  @click="submitChoice('C')"
+                >
                   <span class="option">C.</span> {{ choiceDetail.choiceC }}
                 </div>
-                <div :class="{
-                  'choices-item': true,
-                  'correct-choice':
-                    choiceDetail.choice === 'D' &&
-                    choiceDetail.score === 1,
-                  'wrong-choice':
-                    choiceDetail.choice === 'D' &&
-                    choiceDetail.score === 0,
-                }" @click="submitChoice('D')">
+                <div
+                  :class="{
+                    'choices-item': true,
+                    'correct-choice':
+                      choiceDetail.choice === 'D' && choiceDetail.score === 1,
+                    'wrong-choice':
+                      choiceDetail.choice === 'D' && choiceDetail.score === 0,
+                  }"
+                  @click="submitChoice('D')"
+                >
                   <span class="option">D.</span> {{ choiceDetail.choiceD }}
                 </div>
               </div>
@@ -132,13 +163,22 @@
       </div>
     </div>
   </div>
-  ​ <!-- 点赞和踩按钮 -->
+  ​
+  <!-- 点赞和踩按钮 -->
   <div class="feedback-buttons">
-    <button @click="toggleLike" :class="{ liked: isLiked }" class="feedback-button">
+    <button
+      @click="toggleLike"
+      :class="{ liked: isLiked }"
+      class="feedback-button"
+    >
       <span class="icon">👍</span>
       <span>推荐的题目很有用~</span>
     </button>
-    <button @click="toggleDislike" :class="{ disliked: isDisliked }" class="feedback-button">
+    <button
+      @click="toggleDislike"
+      :class="{ disliked: isDisliked }"
+      class="feedback-button"
+    >
       <span class="icon">👎</span>
       <span>不喜欢本道推荐题目</span>
     </button>
@@ -146,178 +186,181 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { choiceDetails } from "./api/choice_detail";
-import { questionSelect } from "./api/question_select";
-import iconLeftArrow from "./images/left-arrow.png";
-import iconRightArrow from "./images/right-arrow.png";
-import { reviewQuestion } from './api/question_review';
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { choiceDetails } from './api/choice_detail'
+import { questionSelect } from './api/question_select'
+import iconLeftArrow from './images/left-arrow.png'
+import iconRightArrow from './images/right-arrow.png'
+import { reviewQuestion } from './api/question_review'
+import BackToHome from '@/components/ReturnHome/ReturnHome.vue'
 
-const route = useRoute();
-const router = useRouter();
-const questionId = ref(Number(route.query.id));
-const activeTab = ref("content");
+const route = useRoute()
+const router = useRouter()
+const questionId = ref(Number(route.query.id))
+const activeTab = ref('content')
 const choiceDetail = ref<Choice>({
-  choiceA: "",
-  choiceB: "",
-  choiceC: "",
-  choiceD: "",
+  choiceA: '',
+  choiceB: '',
+  choiceC: '',
+  choiceD: '',
   difficulty: 0,
   id: 0,
   knowledgeConcept: [],
-  questionText: "",
+  questionText: '',
   score: 0,
-  choice: ""
-});
-const isLoading = ref(false); // Track loading state
+  choice: '',
+})
+const isLoading = ref(false) // Track loading state
 
 const getChoiceDetail = async (id: any) => {
-  isLoading.value = true;
+  isLoading.value = true
   try {
-    const res = await choiceDetails(id);
+    const res = await choiceDetails(id)
     // console.log('API Response:', res);
     if (res.status === 200) {
-      choiceDetail.value = res.data.data;
-      exerciseId.value = choiceDetail.value.id; // 题目数据获取后赋值
+      choiceDetail.value = res.data.data
+      exerciseId.value = choiceDetail.value.id // 题目数据获取后赋值
     } else {
-      console.error('Error response status:', res.status);
+      console.error('Error response status:', res.status)
     }
   } catch (err) {
-    console.error('获取选择题详情失败:', err);
+    console.error('获取选择题详情失败:', err)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
-
-getChoiceDetail(questionId.value);
+getChoiceDetail(questionId.value)
 
 export interface Choice {
-  choiceA: string;
-  choiceB: string;
-  choiceC: string;
-  choiceD: string;
-  difficulty: number;
-  id: number;
-  knowledgeConcept: KnowledgeConcept[];
-  questionText: string;
-  score: number; // Add score property to Choice interface
-  choice: string;
+  choiceA: string
+  choiceB: string
+  choiceC: string
+  choiceD: string
+  difficulty: number
+  id: number
+  knowledgeConcept: KnowledgeConcept[]
+  questionText: string
+  score: number // Add score property to Choice interface
+  choice: string
 }
 
 export interface KnowledgeConcept {
-  knowledge: string;
-  knowledgeId: number;
+  knowledge: string
+  knowledgeId: number
 }
 
 function submitChoice(choice: string) {
   const request = {
     choice: choice,
     id: questionId.value,
-  };
+  }
 
   questionSelect(request)
     .then((response) => {
-      console.log("提交成功:", response.data);
+      console.log('提交成功:', response.data)
       // Update choiceDetail with the received data
-      choiceDetail.value.score = response.data.data.score;
-      choiceDetail.value.choice = choice;
+      choiceDetail.value.score = response.data.data.score
+      choiceDetail.value.choice = choice
     })
     .catch((error) => {
-      console.error("提交失败:", error);
+      console.error('提交失败:', error)
       // Handle error
-    });
+    })
 }
 
 function previousQuestion() {
-  const prevId = getPreviousQuestionId(questionId.value);
+  const prevId = getPreviousQuestionId(questionId.value)
   if (prevId) {
-    questionId.value = prevId;
-    getChoiceDetail(prevId);
+    questionId.value = prevId
+    getChoiceDetail(prevId)
     router.push({
-      path: "/choice/detail",
+      path: '/choice/detail',
       query: { id: prevId },
-    });
+    })
   }
 }
 
 function nextQuestion() {
-  const nextId = getNextQuestionId(questionId.value);
+  const nextId = getNextQuestionId(questionId.value)
   if (nextId) {
-    questionId.value = nextId;
-    getChoiceDetail(nextId);
+    questionId.value = nextId
+    getChoiceDetail(nextId)
     router.push({
-      path: "/choice/detail",
+      path: '/choice/detail',
       query: { id: nextId },
-    });
+    })
   }
 }
 
 // Dummy functions to get the previous and next question IDs
 // Replace these with your actual logic to get the correct IDs
 function getPreviousQuestionId(currentId: number) {
-  return currentId - 1; // Example logic
+  return currentId - 1 // Example logic
 }
 
 function getNextQuestionId(currentId: number) {
-  return currentId + 1; // Example logic
+  return currentId + 1 // Example logic
 }
 
-const isLiked = ref(false);
-const isDisliked = ref(false);
+const isLiked = ref(false)
+const isDisliked = ref(false)
 async function toggleLike() {
   if (isDisliked.value) {
-    await submitReview(0); // 先取消踩
-    isDisliked.value = false;
+    await submitReview(0) // 先取消踩
+    isDisliked.value = false
   }
-  await submitReview(isLiked.value ? 0 : 1); // 点赞或取消点赞
+  await submitReview(isLiked.value ? 0 : 1) // 点赞或取消点赞
 }
 
 async function toggleDislike() {
   if (isLiked.value) {
-    await submitReview(0); // 先取消点赞
-    isLiked.value = false;
+    await submitReview(0) // 先取消点赞
+    isLiked.value = false
   }
-  await submitReview(isDisliked.value ? 0 : -1); // 踩或取消踩
+  await submitReview(isDisliked.value ? 0 : -1) // 踩或取消踩
 }
 
-const exerciseId = ref<number>(choiceDetail.value.id); // 确保从题目数据中获取 ID
+const exerciseId = ref<number>(choiceDetail.value.id) // 确保从题目数据中获取 ID
 
 // 提交评价
 async function submitReview(reviewType: number) {
   // 检查 exerciseId 是否定义
   if (typeof exerciseId.value === 'undefined' || exerciseId.value === null) {
-    console.error("exerciseId is undefined");
-    return;
+    console.error('exerciseId is undefined')
+    return
   }
-  if (typeof reviewType !== "number") {
-    console.error("Invalid reviewType", reviewType);
-    return;
+  if (typeof reviewType !== 'number') {
+    console.error('Invalid reviewType', reviewType)
+    return
   }
 
   try {
-    const response = await reviewQuestion(exerciseId.value.toString(), reviewType);
+    const response = await reviewQuestion(
+      exerciseId.value.toString(),
+      reviewType,
+    )
     console.log(reviewType)
     console.log(exerciseId.value.toString())
     console.log(response)
     if (response && response.status === 200) {
-      console.log("评价成功:", response.data);
+      console.log('评价成功:', response.data)
       if (reviewType === 1) {
-        isLiked.value = true;
-        isDisliked.value = false;
+        isLiked.value = true
+        isDisliked.value = false
       } else if (reviewType === -1) {
-        isLiked.value = false;
-        isDisliked.value = true;
+        isLiked.value = false
+        isDisliked.value = true
       } else {
-        isLiked.value = false;
-        isDisliked.value = false;
+        isLiked.value = false
+        isDisliked.value = false
       }
     } else {
-      console.error("评价失败:", response?.data || '未知错误');
+      console.error('评价失败:', response?.data || '未知错误')
     }
   } catch (error) {
-    console.error("提交评价失败:", error.message);
+    console.error('提交评价失败:', error.message)
   }
 }
 </script>
@@ -390,7 +433,6 @@ async function submitReview(reviewType: number) {
           }
         }
       }
-
     }
 
     .content {
@@ -479,7 +521,8 @@ async function submitReview(reviewType: number) {
       width: 1em;
       height: 1em;
       margin-right: 5px;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23666" d="M21.41 11.58l-9-9A2 2 0 0010.34 2H4a2 2 0 00-2 2v6.34a2 2 0 00.58 1.42l9 9a2 2 0 002.83 0l6.34-6.34a2 2 0 000-2.83zM6.5 8.5A1.5 1.5 0 118 7a1.5 1.5 0 01-1.5 1.5z"/></svg>') no-repeat center center;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23666" d="M21.41 11.58l-9-9A2 2 0 0010.34 2H4a2 2 0 00-2 2v6.34a2 2 0 00.58 1.42l9 9a2 2 0 002.83 0l6.34-6.34a2 2 0 000-2.83zM6.5 8.5A1.5 1.5 0 118 7a1.5 1.5 0 01-1.5 1.5z"/></svg>')
+        no-repeat center center;
       background-size: contain;
     }
   }
@@ -509,16 +552,20 @@ async function submitReview(reviewType: number) {
   }
 
   .correct-choice {
-    background: linear-gradient(87.37deg,
-        rgb(197, 250, 214) 2.19%,
-        rgba(255, 255, 255, 0.2) 15.05%);
+    background: linear-gradient(
+      87.37deg,
+      rgb(197, 250, 214) 2.19%,
+      rgba(255, 255, 255, 0.2) 15.05%
+    );
     /* Light green for correct choice */
   }
 
   .wrong-choice {
-    background: linear-gradient(87.37deg,
-        rgb(255, 213, 211) 2.19%,
-        rgba(255, 255, 255, 0.2) 15.05%);
+    background: linear-gradient(
+      87.37deg,
+      rgb(255, 213, 211) 2.19%,
+      rgba(255, 255, 255, 0.2) 15.05%
+    );
     /* Light red for wrong choice */
   }
 }
