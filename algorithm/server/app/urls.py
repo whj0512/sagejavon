@@ -567,7 +567,7 @@ def suggest(problem, output, score, task='code-gen', aspect='suggestion'):
         api_key=os.getenv('ZHIPUAI_API_KEY'))
     response = client.chat.completions.create(
         model=os.getenv('GLM_MODEL_NAME'),  # 填写需要调用的模型名称
-        max_tokens=1024,  # 填写生成内容的最长token数
+        max_tokens=4096,  # 填写生成内容的最长token数
         messages=[
             {"role": "user", "content": prompts},
         ],
