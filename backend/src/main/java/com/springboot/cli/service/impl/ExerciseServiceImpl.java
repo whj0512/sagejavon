@@ -54,28 +54,53 @@ public class ExerciseServiceImpl implements ExerciseService {
     public FeedBackVO getFeedBack(Long id, String answer, Integer submitNum) {
         ExerciseDO exercise = exerciseRepository.getById(id);
         if (exercise == null) throw new OpException(OpExceptionEnum.ILLEGAL_ARGUMENT);
+
         String url = PYTHON_SERVICE + "/get_code_score";
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("question", exercise.getQuestionText());
         requestBody.put("code", answer);
+
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(requestBody, requestHeaders);
         String result;
-        try{
+
+        try {
             result = restTemplate.postForObject(url, httpEntity, String.class);
         } catch (Exception e) {
             throw new OpException(OpExceptionEnum.LLM_ERROR);
         }
+
         if (result == null) throw new OpException(OpExceptionEnum.LLM_ERROR);
+
         JSONObject json = JSONObject.parseObject(result);
         String data = json.getString("data");
         JSONObject dataJson = JSONObject.parseObject(data);
+
+        // Check for null and set default values if necessary
         String suggestion = dataJson.getString("suggestion");
+        if (suggestion == null) {
+            suggestion = "No suggestion provided";  // Default value for suggestion
+        }
+
         Integer codingStyle = dataJson.getInteger("codingStyle");
+        if (codingStyle == null) {
+            codingStyle = 0;  // Default value for codingStyle
+        }
+
         Integer functionalCorrectness = dataJson.getInteger("functionalCorrectness");
+        if (functionalCorrectness == null) {
+            functionalCorrectness = 0;  // Default value for functionalCorrectness
+        }
+
         Integer usefulness = dataJson.getInteger("usefulness");
+        if (usefulness == null) {
+            usefulness = 0;  // Default value for usefulness
+        }
+
+        // Calculate score based on the available values
         double score = Math.round((codingStyle + functionalCorrectness + usefulness) / 12.0 * 100.0) / 100.0;
+
         ExerciseRecordDO exerciseRecord = ExerciseRecordDO.builder()
                 .exerciseId(id)
                 .studentId(AuthStorage.getUser().getUserId())
@@ -85,16 +110,20 @@ public class ExerciseServiceImpl implements ExerciseService {
                 .type(0)
                 .submitTime(LocalDateTime.now())
                 .build();
+
         exerciseRecordRepository.save(exerciseRecord);
+
         String correctAnswer = null;
         if (submitNum >= submitNumThreshold)
             correctAnswer = exercise.getCorrectAnswer();
+
         return FeedBackVO.builder()
                 .correctAnswer(correctAnswer)
-                .score((int)(score * 100))
+                .score((int)(score * 100))  // Convert score to an integer percentage
                 .suggestion(suggestion)
                 .build();
     }
+
 
     @Override
     public FeedBackVO getSelectFeedBack(Long id, String choice) {
