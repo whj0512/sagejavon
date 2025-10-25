@@ -561,9 +561,32 @@ async function submitReview(reviewType: number) {
   border-color: #f44336;
   color: #f44336;
 }
-.v-md-preview {
-  word-wrap: break-word;
-  white-space: pre-wrap; /* Ensures that white spaces are preserved while wrapping text */
+.vuepress-markdown-body {
+  word-wrap: break-word; /* Allow text to break and wrap */
+  white-space: pre-wrap; /* Ensure white spaces are preserved */
   overflow-wrap: break-word; /* For handling long words without spaces */
+  max-width: 100%; /* Prevent it from overflowing the container */
+  word-break: break-word; /* Prevent overflow due to long words */
+}
+
+.v-md-editor-preview {
+  width: 100%;
+  overflow-wrap: break-word; /* Break long words */
+}
+
+pre {
+  white-space: pre-wrap; /* Allow wrapping of preformatted text */
+  word-wrap: break-word; /* Break words if necessary */
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  word-wrap: break-word;
+  overflow-wrap: break-word; /* Ensure text within headings also wraps properly */
 }
 </style>
