@@ -17,6 +17,7 @@ import com.springboot.cli.repository.impl.ExerciseKnowledgeRepository;
 import com.springboot.cli.repository.impl.ExerciseRecordRepository;
 import com.springboot.cli.repository.impl.ExerciseRepository;
 import com.springboot.cli.service.ExerciseService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,7 @@ import java.util.*;
 import static com.springboot.cli.common.CommonConstants.PYTHON_SERVICE;
 import static com.springboot.cli.common.CommonConstants.submitNumThreshold;
 
+@Slf4j
 @Service
 public class ExerciseServiceImpl implements ExerciseService {
     @Autowired
@@ -74,6 +76,7 @@ public class ExerciseServiceImpl implements ExerciseService {
         if (result == null) throw new OpException(OpExceptionEnum.LLM_ERROR);
 
         JSONObject json = JSONObject.parseObject(result);
+        log.info(json.toJSONString());
         String data = json.getString("data");
         JSONObject dataJson = JSONObject.parseObject(data);
 
