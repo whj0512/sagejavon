@@ -620,21 +620,31 @@ def program():
 #         return None
 
 
+import json
+
 def extract_json_with_regex(text):
-    # 查找第一个花括号之间的内容
+    # Ensure there are curly braces in the text
     start_index = text.find('{')
-    end_index = text.find('}')
+    end_index = text.rfind('}')  # Use rfind to get the last closing brace
+
+    # If either start or end brace isn't found, return an empty string
+    if start_index == -1 or end_index == -1 or start_index > end_index:
+        return ''
+
+    # Extract the potential JSON part
     json_str = text[start_index:end_index + 1]
 
     try:
-        # 尝试解析为JSON
+        # Try to parse the JSON string
         json_data = json.loads(json_str)
-        # 转换为去除多余字符和换行符的JSON格式字符串
+        
+        # Clean up the JSON string and return it in a compact form (no extra spaces)
         cleaned_json_str = json.dumps(json_data, separators=(',', ':'))
         return cleaned_json_str
     except json.JSONDecodeError:
-        # 如果解析失败，返回空字符串或其他适当的处理方式
+        # If the JSON parsing fails, return an empty string
         return ''
+
 
 
 @urls_bp.route('/get_recommend_list', methods=['GET'])
