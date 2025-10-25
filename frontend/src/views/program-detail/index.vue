@@ -561,4 +561,9 @@ async function submitReview(reviewType: number) {
   border-color: #f44336;
   color: #f44336;
 }
+.v-md-preview {
+  word-wrap: break-word;
+  white-space: pre-wrap; /* Ensures that white spaces are preserved while wrapping text */
+  overflow-wrap: break-word; /* For handling long words without spaces */
+}
 </style>
