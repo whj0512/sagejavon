@@ -89,7 +89,7 @@ const totalPages = computed(() => pages.value)
   justify-content: center; /* Center horizontally */
   align-items: center; /* Center vertically */
   flex-direction: column; /* Stack children vertically */
-  margin-top: -30px;
+  margin-top: 30px;
 }
 
 .container {
