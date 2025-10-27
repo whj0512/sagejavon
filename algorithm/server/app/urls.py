@@ -187,10 +187,10 @@ TASK_PROMPTS = {
                     codingStyle (0-4) Evaluate codingStyle in four areas: coding standards, comments, variable and function naming, and code structure.
                     
                     - A score of 0: Code snippet does not conform to any coding standards; lacks comments or comments are meaningless; variable and function naming is arbitrary and unclear; poor code structure with a lot of duplicate code or redundancy.
-                    - A score of 1: Code snippet does not conform to Java coding standards; comments are lacking; variable and function naming is inaccurate or nonsensical; code structure is confusing and there is a lot of duplicate code.
-                    - A score of 2: Code snippet generally conforms to Java coding standards; comments are lacking; there are some inaccuracies in variable and function naming; code structure is moderate with some duplicate code.
+                    - A score of 1: Code snippet does not conform to Java or python coding standards; comments are lacking; variable and function naming is inaccurate or nonsensical; code structure is confusing and there is a lot of duplicate code.
+                    - A score of 2: Code snippet generally conforms to Java or python coding standards; comments are lacking; there are some inaccuracies in variable and function naming; code structure is moderate with some duplicate code.
                     - A score of 3: Code snippet generally conforms to java coding standards; comments are clear but with a few omissions; variable and function naming are generally reasonable; code structure is generally clear with a few duplicates of code.
-                    - A score of 4: Code snippet conforms to Java coding standards; comments are clear; variable naming and function naming are accurate and meaningful; code structure is reasonable with no duplicate code.
+                    - A score of 4: Code snippet conforms to Java or python coding standards; comments are clear; variable naming and function naming are accurate and meaningful; code structure is reasonable with no duplicate code.
                     
                     Evaluation Steps:
                     1. Read the problem carefully and identify required functionalities of the implementation.
@@ -218,7 +218,7 @@ TASK_PROMPTS = {
             {
                 "reference-enhanced":
                     """\
-                    You will be given the code snippet(using Java),problem and the evaluation results.
+                    You will be given the code snippet(using Java or python),problem and the evaluation results.
                     Your task is to give Chinese suggestions for code improvements based on three metrics scores.
                     Please make sure you read and understand these instructions carefully.
                     Please keep this document open while reviewing, and refer to it as needed.
