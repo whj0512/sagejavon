@@ -6,6 +6,8 @@ export default {
   "switchLanguage": "Switch Language",
   "addQuestion": "Add Question",
   "addSuccess": "Add Success",
+  "choiceCounts": "choice questions",
+  "programCounts": "program questions",
   "qaTitle": "QA ",
   "inputPlaceholder": "I'm your programming mentor~ I can help you step by step to solve complex programming problems, recommend suitable problems, or analyze your code together.",
   "choiceTitle": "Choice Questions",

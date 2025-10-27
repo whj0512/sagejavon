@@ -158,7 +158,7 @@ async function onConversation() {
         .pipeThrough(new TextDecoderStream())
         .getReader()
       let finalResponse = ''
-      let textContent = '稍等...正在生成中'
+      let textContent = '稍等...正在生成中\n'
 
       // 使用逐字输出的方式
       const writer = async () => {

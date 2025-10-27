@@ -7,6 +7,8 @@ export default {
   "addQuestion": "新增提问",
   "addSuccess": "新增成功",
   "qaTitle": "知识问答 ",
+  "choiceCounts": "道选择题",
+  "programCounts": "道编程题",
   "inputPlaceholder": "我是你的编程小导师~帮你逐步解决复杂的编程问题，并为你推荐一些合适的编程题目，可以把题目发给我，也可以附上你的代码，让我们共同分析对错~",
   "choiceTitle": "选择题",
   "codeTitle": "代码题",

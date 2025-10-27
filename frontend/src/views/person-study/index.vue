@@ -120,8 +120,8 @@ function navigateHistory() {
 onMounted(async () => {
   try {
     const data = await fetchPersonStudy()
-    choiceDescription.value = data.codeNumber + '道选择题'
-    codeDescription.value = data.selectNumber + '道编程题'
+    choiceDescription.value = data.codeNumber + t('choiceCounts')
+    codeDescription.value = data.selectNumber + t('programCounts')
     historyDescription.value = data.solveQuestions + '条历史记录'
     solveDays.value = padNumber(data.solveDays)
     solveQuestions.value = padNumber(data.solveQuestions)
