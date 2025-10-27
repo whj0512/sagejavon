@@ -298,12 +298,12 @@ Assistant: I'm here to assist you with information related to `{bot_topic}`. If 
         answer_format_prompt = '''**Expected Response Format:**
 The response should be a JSON object, with 'answer' and 'source' fields.
 - "answer": "A detailed and specific answer, crafted in the question's language and fully formatted using **Markdown** syntax. **Don't repeat the question**". Only cite the most relevant Documents that answer the question accurately.
-- "source": ["List only unique `Citation URL` from the context that are directly related to the answer. Ensure that each URL is listed only once. If no documents are referenced, or the documents are not relevant, use an empty list []. The number of `Citation URL` should not exceed {RECALL_TOP_K}. The generated answer must have indeed used content from the document corresponding to the `Citation URL` before including that URL in the `source`; otherwise, the URL should not be included in the `source`."]'''
+- "source": ["List only unique content from the context that are directly related to the answer. Ensure that each content is listed only once. If no documents are referenced, or the documents are not relevant, do not return the sources. The number of `Citation` should not exceed {RECALL_TOP_K}. "]'''
     else:
         answer_format_prompt = '''**Expected Response Format:**
-The response should be fully formatted using **Mardown** syntax (Note: Don't start with 'Answer:' or 'answer:'). First output the answer. Then output the Sources. And remember the URL_PREFIX of the sources is 'https://rag.xhpolaris.com/'. And Remember to return the specific content of the files. Don't only return the url. You should also return the url's content.
+The response should be fully formatted using **Mardown** syntax (Note: Don't start with 'Answer:' or 'answer:'). First output the answer. Then output the Sources. And Remember to return the specific content of the files. Don't return the url. You should just return the content.
 - A detailed and specific answer, crafted in the question's language. Don't repeat the question. Only cite the most relevant Documents that answer the question accurately.
-- Sources: "List only unique `Citation URL` from the context that are directly related to the answer. Ensure that each URL is listed only once. If no documents are referenced, or the documents are not relevant, return ''. The number of `Citation URL` should not exceed {RECALL_TOP_K}. The generated answer must have indeed used content from the document corresponding to the `Citation URL` before including that URL in the `Sources`; otherwise, the URL should not be included in the `Sources`."'''
+- Sources: "List only unique content from the context that are directly related to the answer. Ensure that each content is listed only once. If no documents are referenced, or the documents are not relevant, do not return the sources. The number of `Citation` should not exceed {RECALL_TOP_K}. "'''
 
     prompt = f"""
 You are a smart customer service assistant and problem-solver, tasked to answer any question about `{bot_topic}`. Using the provided context, answer the user's question to the best of your ability using the resources provided.
@@ -317,7 +317,7 @@ Base on the Chat History and the provided context. First, analyze the provided c
 **Response Requirements:**
 - Don't repeat the question at the beginning.
 - If unsure about the answer, proactively seek clarification.
-- Ensure that answers are strictly based on the provided context.
+- Ensure that answers are based on the provided context.
 - Inform users that questions unrelated to the provided context cannot be answered.
 - Format the answer using Markdown syntax for clarity and readability.
 - Respond in the language of the original question; for instance, reply in Chinese if the question was asked in Chinese and in English if it was asked in English!
@@ -333,7 +333,6 @@ The answer must be fully formatted using Markdown syntax. This includes:
 - **Bold** (`**bold**`) and *italic* (`*italic*`) text for emphasis.
 - Unordered lists (`- item`) for itemization and ordered lists (`1. item`) for sequencing.
 - `Inline code` (`` `Inline code` ``) for brief code snippets and (` ``` `) for longer examples, specifying the programming language for syntax highlighting when possible.
-- [Hyperlinks](URL) (`[Hyperlinks](URL)`) to reference external sources.
 - Headings (`# Heading 1`, `## Heading 2`, ...) to structure the answer effectively.
 """
 
