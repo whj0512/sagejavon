@@ -291,13 +291,17 @@ function submitCode(choice: string) {
 
   questionCode(request)
     .then((response) => {
-      console.log('提交成功:', response.data)
-      score.value = response.data.data.score
-      // suggestion.value = response.data.data.suggestion
-      console.log(response.data.data)
-      suggestion.value = response.data.data.suggestion
-      correctAnswer.value = response.data.data.correctAnswer
-      showModal.value = true
+      if (response?.code == 'LLM_ERROR') {
+        alert('大模型错误，请重新提交或稍后再试')
+      } else {
+        console.log('提交成功:', response.data)
+        score.value = response.data.data.score
+        // suggestion.value = response.data.data.suggestion
+        console.log(response.data.data)
+        suggestion.value = response.data.data.suggestion
+        correctAnswer.value = response.data.data.correctAnswer
+        showModal.value = true
+      }
       isLoading.value = false
     })
     .catch((error) => {
