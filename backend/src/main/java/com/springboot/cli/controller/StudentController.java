@@ -4,6 +4,7 @@ import com.springboot.cli.common.base.BaseResponse;
 import com.springboot.cli.common.exception.OpException;
 import com.springboot.cli.common.jwt.AuthStorage;
 import com.springboot.cli.common.jwt.JwtUser;
+import com.springboot.cli.model.DO.CheckCode;
 import com.springboot.cli.model.DO.StudentDO;
 import com.springboot.cli.model.VO.StudentKnowledgeGraphVO;
 import com.springboot.cli.model.VO.StudentVO;
@@ -20,6 +21,19 @@ public class StudentController {
 
     @Resource
     private StudentService studentService;
+
+    @PostMapping("/check")
+    public BaseResponse<Void> checkCode(@RequestBody CheckCode checkCode) {
+        JwtUser jwtUser = AuthStorage.getUser();
+        log.info("Get student information: studentId = {}", jwtUser.getUserId());
+        try {
+            return BaseResponse.buildSuccess(studentService.checkCode(checkCode));
+        } catch (OpException e) {
+            return BaseResponse.buildBizEx(e);
+        } catch (Exception e) {
+            return BaseResponse.buildSysEx(e);
+        }
+    }
 
     @GetMapping("/information")
     public BaseResponse<StudentDO> getStuInfo() {
