@@ -24,8 +24,6 @@ public class StudentController {
 
     @PostMapping("/check")
     public BaseResponse<Void> checkCode(@RequestBody CheckCode checkCode) {
-        JwtUser jwtUser = AuthStorage.getUser();
-        log.info("Get student information: studentId = {}", jwtUser.getUserId());
         try {
             return BaseResponse.buildSuccess(studentService.checkCode(checkCode));
         } catch (OpException e) {

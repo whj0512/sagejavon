@@ -24,7 +24,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 // 开放的路径
                 .excludePathPatterns("/login/**", "/token/validate", "/student/register","/student/login", "/login", "/register","register","/python/login/**", "/python/token/validate", "/python/student/register","/python/student/login", "/python/login", "/python/register","/python/register"
-                ,"/backend/login/**", "/backend/token/validate", "/backend/student/register","/backend/student/login", "/backend/login", "/backend/register","/backend/register","/backend/python/login/**", "/backend/python/token/validate", "/backend/python/student/register","/backend/python/student/login", "/backend/python/login", "/backend/python/register","/backend/python/register");
+                ,"/backend/login/**", "/backend/token/validate", "/backend/student/register","/backend/student/login", "/backend/login", "/backend/register","/backend/register","/backend/python/login/**", "/backend/python/token/validate", "/backend/python/student/register","/backend/python/student/login", "/backend/python/login", "/backend/python/register","/backend/python/register", "/check", "/backend/check", "/backend/python/check");
     }
 
     /**
