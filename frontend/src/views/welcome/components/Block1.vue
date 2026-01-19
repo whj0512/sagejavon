@@ -153,7 +153,12 @@ const ACCESS_OK_KEY = 'access-checked'
 
 function isOkResponse(res) {
   // 兼容多种 BaseResponse：按你后端真实结构可进一步收敛
-  return res?.code === 'SUCCESS'
+  return (
+    res?.code == 'SUCCESS' ||
+    res?.success === true ||
+    res?.data?.status === 200 ||
+    res?.data?.code === 0
+  )
 }
 
 async function doCheckCode() {
