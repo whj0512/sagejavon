@@ -17,15 +17,35 @@
         />
       </svg>
     </div>
+
     <div class="header">Welcome to SageJavon.</div>
     <div class="notice">
       {{ t('agreeNotice') }} <a>{{ t('terms') }}</a> {{ t('and') }}
       <a>{{ t('privacy') }}</a>
     </div>
+
+    <!-- 登录前置：先输入访问码，通过后才显示登录组件 -->
+    <div v-if="!accessChecked" class="access-gate">
+      <div class="gate-title">请输入访问码</div>
+      <NInput
+        v-model:value="accessCode"
+        placeholder="Access Code"
+        clearable
+        @keyup.enter="doCheckCode"
+      />
+      <div class="gate-actions">
+        <NButton type="primary" :loading="checkingCode" @click="doCheckCode">
+          验证
+        </NButton>
+      </div>
+    </div>
+
     <!-- 登录 -->
-    <LoginPasswordForm />
+    <LoginPasswordForm v-else />
   </div>
+
   <Modal @assistant-selected="onAssistantSelected" ref="assistantModal" />
+
   <div class="block1Container" :style="{ height: height + 'px' }">
     <div class="placeholder"></div>
     <div class="blockContent">
@@ -54,6 +74,7 @@
           <div class="pic"></div>
         </div>
       </div>
+
       <!-- 卡片式特性介绍 -->
       <div class="card-container">
         <div v-for="item in cardContent" :key="item.id" class="card">
@@ -93,16 +114,22 @@ import {
   NTabs,
   useMessage,
 } from 'naive-ui'
+
 import { signInByVerifyCode } from './api/signIn/sign_in_by_verifyCode'
 import { signInByPassword } from './api/signIn/sign_in_by_password'
 import { sendVerifyCode } from './api/signIn/send_verify_code'
 import { getUserInfo } from './api/info/get_user_info'
+
+// 你需要新增这个接口封装：例如 ./api/signIn/check_code 或者你自己的 index.ts 里导出
+import { checkCode } from './api'
+
 const themeOverrides = {
   common: {
     primaryColor: '#000',
     primaryColorHover: '#000',
   },
 }
+
 const message = useMessage()
 const account = ref('')
 const password = ref('')
@@ -111,16 +138,62 @@ const showVerifyCode = ref(false)
 const signInType = ref('verifyCode')
 const user = ref(null)
 console.log(localStorage.getItem('userInfo'))
+
 // 验证码倒计时
-// 在setup中定义一个ref用于存储倒计时剩余时间
 const countdown = ref(0)
 
 const overlay = ref(null)
 const signInContainer = ref(null)
 
+// ===== 登录前置：访问码校验 =====
+const accessCode = ref('')
+const accessChecked = ref(false)
+const checkingCode = ref(false)
+const ACCESS_OK_KEY = 'access-checked'
+
+function isOkResponse(res) {
+  // 兼容多种 BaseResponse：按你后端真实结构可进一步收敛
+  return (
+    res?.status === 200 ||
+    res?.code === 0 ||
+    res?.success === true ||
+    res?.data?.status === 200 ||
+    res?.data?.code === 0
+  )
+}
+
+async function doCheckCode() {
+  if (!accessCode.value || accessCode.value.trim() === '') {
+    warning('请输入访问码')
+    return
+  }
+
+  checkingCode.value = true
+  try {
+    const res = await checkCode(accessCode.value.trim())
+    if (isOkResponse(res)) {
+      success('验证通过')
+      accessChecked.value = true
+      localStorage.setItem(ACCESS_OK_KEY, '1')
+    } else {
+      error(res?.msg || res?.message || res?.data?.msg || '访问码无效')
+    }
+  } catch (e) {
+    error('访问码校验失败，请稍后再试')
+  } finally {
+    checkingCode.value = false
+  }
+}
+// ===============================
+
 onMounted(() => {
   window.addEventListener('resize', onResize)
   onResize()
+
+  // 可选：如果你希望验证一次后一直有效
+  if (localStorage.getItem(ACCESS_OK_KEY) === '1') {
+    accessChecked.value = true
+  }
 })
 
 onUnmounted(() => {
@@ -169,6 +242,7 @@ function startCountdown() {
     if (countdown.value <= 0) clearInterval(timer) // 当倒计时结束时清除定时器
   }, 1000)
 }
+
 // 监听countdown的变化，当倒计时结束时将showVerifyCode设置为true
 watch(countdown, (val) => {
   if (val === 0) showVerifyCode.value = true
@@ -191,7 +265,6 @@ async function register() {
   const validateResult = __validateAccount(account.value)
   if (validateResult !== '合法') {
     account.value = ''
-    // alert(validateResult)
     warning(validateResult)
     return
   }
@@ -200,14 +273,10 @@ async function register() {
 
   sendVerifyCode(account.value)
     .then((res) => {
-      // console.log(res)
       if (res.status === 200) showVerifyCode.value = true
-      //   alert('验证码发送失败，请稍后再试')
       else error('验证码发送失败，请稍后再试')
     })
     .catch(() => {
-      // console.log(err)
-      // alert('验证码发送失败，请稍后再试')
       error('验证码发送失败，请稍后再试')
     })
 }
@@ -217,10 +286,10 @@ async function registerVerify() {
   const validateResult = __validateVerifyCode(verifyCode.value)
   if (validateResult !== '合法') {
     verifyCode.value = ''
-    // alert(validateResult)
     warning(validateResult)
     return
   }
+
   signInByVerifyCode(account.value, verifyCode.value)
     .then((res) => {
       console.log(res)
@@ -230,13 +299,10 @@ async function registerVerify() {
         // 登录成功，返回首页
         window.location.href = '/'
       } else {
-        // alert('验证码错误，请重新输入')
         error('验证码错误，请重新输入')
       }
     })
     .catch(() => {
-      //   console.log(err)
-      //   alert('验证码错误，请重新输入')
       error('验证码错误，请重新输入')
     })
     .finally(() => {
@@ -266,12 +332,12 @@ async function verifyCode_signIn() {
       error('验证码发送失败，请稍后再试')
     })
 }
+
 // 登录事件：根据登录方式，调用相应的登录函数
 async function signIn(type) {
   const validateResult = __validateAccount(account.value)
   if (validateResult !== '合法') {
     account.value = ''
-    // alert(validateResult)
     warning(validateResult)
     return
   }
@@ -281,7 +347,6 @@ async function signIn(type) {
     const validateResult = __validateVerifyCode(verifyCode.value)
     if (validateResult !== '合法') {
       verifyCode.value = ''
-      //   alert(validateResult)
       warning(validateResult)
       return
     }
@@ -300,7 +365,6 @@ async function signIn(type) {
             console.log(userInfoRes)
             if (userInfoRes.status === 200) {
               console.log(userInfoRes.data.data)
-              // 在这里处理获取到的用户信息
               localStorage.setItem(
                 'userInfo',
                 JSON.stringify(userInfoRes.data.data),
@@ -308,20 +372,15 @@ async function signIn(type) {
             }
           })
           .catch((err) => {
-            // 在这里处理获取用户信息失败的情况
             console.log(err)
           })
-        // 调用 getUserInfo 获取用户信息
-        // 登录成功，返回首页
         router.push('/chat')
       } else {
-        //   alert(res.msg)
         error(res.msg)
       }
     })
     .catch(() => {
-      console.log(err)
-      // alert('登录失败，请稍后再试')
+      // 这里原代码 console.log(err) 但 err 未定义，会报错，保留原逻辑同时修复
       error('登录失败，请稍后再试')
     })
 }
@@ -365,8 +424,13 @@ function __validateVerifyCode(verifyCode) {
 function cancel() {
   account.value = ''
   verifyCode.value = ''
-
   user.value = null
+
+  // 关闭弹窗时是否清除访问码校验状态：这里默认不清（验证一次长期有效）
+  // 如果你希望每次打开都要重新验证：取消注释下面两行
+  // accessCode.value = ''
+  // accessChecked.value = false; localStorage.removeItem(ACCESS_OK_KEY)
+
   overlay.value.classList.remove('overlay-blur')
   signInContainer.value.classList.remove('sign-in-appear')
   isLogin.value = false
@@ -483,6 +547,24 @@ function cancel() {
       padding: 4px 0;
       height: 36px;
     }
+  }
+}
+
+/* 登录前置校验区域 */
+.access-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+
+  .gate-title {
+    color: #3e3e3e;
+    font-size: 14px;
+  }
+
+  .gate-actions {
+    display: flex;
+    justify-content: center;
   }
 }
 
