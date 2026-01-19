@@ -157,7 +157,7 @@ function isOkResponse(res) {
     res?.code == 'SUCCESS' ||
     res?.success === true ||
     res?.data?.status === 200 ||
-    res?.data?.code === 0
+    res?.data?.code == 'SUCCESS'
   )
 }
 
