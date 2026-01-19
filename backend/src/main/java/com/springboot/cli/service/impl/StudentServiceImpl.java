@@ -10,9 +10,7 @@ import com.springboot.cli.common.enums.OpExceptionEnum;
 import com.springboot.cli.common.exception.OpException;
 import com.springboot.cli.common.jwt.AuthStorage;
 import com.springboot.cli.common.utils.JwtUtil;
-import com.springboot.cli.model.DO.KnowledgeEdgesDO;
-import com.springboot.cli.model.DO.KnowledgeNodesDO;
-import com.springboot.cli.model.DO.StudentDO;
+import com.springboot.cli.model.DO.*;
 import com.springboot.cli.model.DO.python.KnowledgeEdgesPythonDO;
 import com.springboot.cli.model.DO.python.KnowledgeNodesPythonDO;
 import com.springboot.cli.model.VO.StudentKnowledgeGraphVO;
@@ -44,6 +42,8 @@ public class StudentServiceImpl implements StudentService {
     private KnowledgeNodesPythonRepository knowledgeNodesPythonRepository;
     @Autowired
     private KnowledgeEdgesPythonRepository knowledgeEdgesPythonRepository;
+    @Autowired
+    private CodeMapRepository codeMapRepository;
 
     @Override
     public StudentDO getStuInfo() {
@@ -220,6 +220,50 @@ public class StudentServiceImpl implements StudentService {
         vo.setEdges(edges);
 
         return vo;
+    }
+
+    @Override
+    public Void checkCode(CheckCode checkCode) {
+        if (checkCode == null) {
+            throw new OpException(OpExceptionEnum.ILLEGAL_ARGUMENT);
+        }
+
+        String input = checkCode.getCode(); // 这里假设 CheckCode 里字段叫 code
+        if (input == null || input.trim().isEmpty()) {
+            throw new OpException(OpExceptionEnum.ILLEGAL_ARGUMENT);
+        }
+        input = input.trim();
+
+        // 一次查出：命中暗码或命中明码都返回
+        String finalInput = input;
+        CodeMapDO hit = codeMapRepository.getOne(
+                Wrappers.<CodeMapDO>lambdaQuery()
+                        .and(w -> w.eq(CodeMapDO::getAnma, finalInput)
+                                .or()
+                                .eq(CodeMapDO::getMingma, finalInput)),
+                false
+        );
+
+        // 两边都没命中：不是有效暗码
+        if (hit == null) {
+            // 你可以换成更具体的枚举：CODE_NOT_EXIST / CODE_INVALID ...
+            throw new OpException(OpExceptionEnum.ILLEGAL_ARGUMENT);
+        }
+
+        // 命中暗码：通过
+        if (input.equals(hit.getAnma())) {
+            return null; // Void：校验通过直接返回 null
+        }
+
+        // 命中明码：明确提示“你输错类型了”
+        if (input.equals(hit.getMingma())) {
+            // 你可以换成更具体的枚举：CODE_TYPE_ERROR / NEED_ANMA ...
+            throw new OpException(OpExceptionEnum.ILLEGAL_ARGUMENT);
+        }
+
+        // 理论上不该到这里（除非数据异常）
+        throw new OpException(OpExceptionEnum.ILLEGAL_ARGUMENT);
+
     }
 
 
