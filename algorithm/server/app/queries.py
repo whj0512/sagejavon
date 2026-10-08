@@ -431,25 +431,15 @@ def smart_query():
 @check_smart_query
 # @token_required
 def smart_query_stream():
-    # 处理预检请求（CORS preflight）
-    if request.method == 'OPTIONS':
-        return Response('', status=200, headers={
-            'Access-Control-Allow-Origin': request.headers.get('Origin', '*'),
-            'Access-Control-Allow-Credentials': 'true',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        })
-
+    # Flask-CORS handles preflight and error responses as well as successful ones.
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'X-Accel-Buffering': 'no',
-        'Access-Control-Allow-Origin': request.headers.get('Origin', '*'),
-        'Access-Control-Allow-Credentials': 'true'
     }
 
     try:
-        user_id = '9ddc73e1-4992-4618-9e58-5bdf57bf3b91'
+        user_id = request.user_id
         query = request.query
         intervene_data = request.intervene_data
         if intervene_data:
@@ -468,7 +458,8 @@ def smart_query_stream():
             response = generate_answer(query, user_id, True)
             for chunk in response:
                 # logger.info(f"chunk is: {chunk}")
-                content = chunk.choices[0].delta.content
+                # Usage-only chunks can have an empty choices list.
+                content = chunk.choices[0].delta.content if chunk.choices else None
                 if content:
                     answer_chunks.append(content)
                     # Send each answer segment
@@ -483,11 +474,29 @@ def smart_query_stream():
             logger.success(
                 f"query: '{query}' and user_id: '{user_id}' is processed successfully, the answer is:\n{answer}\nthe total timecost is {timecost}\n")
             save_user_query_history(user_id, query, answer, True)
-        return Response(generate_llm(), mimetype="text/event-stream", headers=headers)
+        # Advance the generator while Flask can still produce an error response.
+        # Otherwise a failure before the first chunk bypasses Flask's CORS hooks.
+        stream = generate_llm()
+        first_chunk = next(stream, None)
+        if first_chunk is None:
+            raise RuntimeError('The model returned an empty answer')
+
+        def generate_response():
+            try:
+                yield first_chunk
+                yield from stream
+            except Exception:
+                logger.exception('Model stream interrupted')
+                raise
+            finally:
+                stream.close()
+
+        result = Response(generate_response(), mimetype="text/event-stream", headers=headers)
+        result.call_on_close(stream.close)
+        return result
     except Exception as e:
-        logger.error(
-            f"query: '{query}' and user_id: '{user_id}' is processed failed, the exception is {e}")
-        return {'retcode': -30000, 'message': str(e), 'data': {}}
+        logger.exception('Unable to start model stream')
+        return {'retcode': -30000, 'message': '模型服务暂时不可用，请稍后重试。', 'data': {}}, 502
 
 
 @queries_bp.route('/get_user_conversation_list', methods=['POST'])

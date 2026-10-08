@@ -28,7 +28,14 @@
 
           <div class="content">
             <div v-if="activeTab === 'content'">
-              <div class="program-content">
+              <div v-if="isPageLoading">正在加载题目…</div>
+              <div v-else-if="loadError" role="alert">
+                {{ loadError }}
+                <NButton v-if="questionId !== null" @click="loadQuestion"
+                  >重试</NButton
+                >
+              </div>
+              <div v-else-if="programDetail" class="program-content">
                 <div class="sub-section">
                   <span class="tag">{{ programDetail.difficulty }}</span>
                   <span
@@ -58,6 +65,7 @@
             <button
               @click="toggleLike"
               :class="{ liked: isLiked }"
+              :disabled="!programDetail || isReviewing"
               class="feedback-button"
             >
               <span class="icon">👍</span>
@@ -66,6 +74,7 @@
             <button
               @click="toggleDislike"
               :class="{ disliked: isDisliked }"
+              :disabled="!programDetail || isReviewing"
               class="feedback-button"
             >
               <span class="icon">👎</span>
@@ -94,13 +103,13 @@
               :language="language"
               width="100%"
               height="100%"
-              @editor-mounted="editorMounted"
             ></monacoEditor>
           </div>
           <NButton
             v-if="!isLoading"
             style="width: 100%; margin-top: 5px"
             type="primary"
+            :disabled="isPageLoading || !programDetail"
             @click="submitCode"
           >
             {{ t('submitCode') }}
@@ -135,43 +144,19 @@
 </template>
 
 <script setup lang="ts">
-import QuestionHover from '@/components/question-list/QuestionHover.vue'
-import PanelBox from '../panel-box/index.vue'
-import { ref, onMounted } from 'vue'
-import * as monaco from 'monaco-editor'
-import monacoEditor from './components/monacoEditor.vue'
-import DragBall from './components/DragBall.vue'
-import BackToHome from '@/components/ReturnHome/ReturnHome.vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { programDetails } from './api/program_detail'
-import { NButton, NModal } from 'naive-ui'
-import { questionCode } from './api/question_code'
-import ModalDialog from './components/ModalDialog.vue'
+import { NButton, NModal, useMessage } from 'naive-ui'
+import QuestionHover from '@/components/question-list/QuestionHover.vue'
+import BackToHome from '@/components/ReturnHome/ReturnHome.vue'
 import historyList from '@/components/exercise/history-list.vue'
+import { t } from '@/locales'
+import PanelBox from '../panel-box/index.vue'
+import monacoEditor from './components/monacoEditor.vue'
+import { programDetails } from './api/program_detail'
+import { questionCode } from './api/question_code'
 import { recordList } from './api/record_list'
 import { reviewQuestion } from './api/question_review'
-import { codeRecordDetail } from '@/components/exercise/api/code_record_detail'
-import { t as globalT } from '@/locales'
-
-const t = globalT
-
-const bodyStyle = ref({
-  width: '700px',
-})
-const segmented = ref({
-  content: 'soft',
-  footer: 'soft',
-})
-const showModal = ref(false)
-
-const route = useRoute()
-const questionId = ref(route.query.id)
-console.log(questionId.value)
-
-const language = ref('java')
-const editorMounted = (editor: monaco.editor.IStandaloneCodeEditor) => {
-  console.log('editor实例加载完成', editor)
-}
 
 interface KnowledgeConcept {
   knowledgeId: number
@@ -189,181 +174,203 @@ export interface ExerciseRecordList {
   type: number
 }
 
-const records = ref<ExerciseRecordList[]>([])
-const correctAnswer = ref('')
-const correct = ref('')
-// const response = await recordList(Number(questionId.value));
-// console.log(response)
-// records.value = response.data.data
-// console.log(records.value)
-
-onMounted(async () => {
-  try {
-    const res = await recordList(questionId.value)
-    console.log(res)
-    records.value = res.data.data
-  } catch (error) {
-    console.error('获取记录失败:', error)
-  }
-
-  try {
-    const response = await codeRecordDetail(questionId.value)
-    console.log(response)
-    correct.value = response.data.data.correctAnswer
-  } catch (error) {
-    console.error('获取正确答案失败:', error)
-  }
-
-  try {
-    const programRes = await programDetails(questionId.value)
-    if (programRes.status === 200) {
-      programDetail.value = programRes.data.data
-      exerciseId.value = programDetail.value.id // 只有在数据加载完成后才赋值
-    }
-  } catch (err) {
-    console.error('获取程序详情失败:', err)
-  }
-})
-
 export interface Program {
   difficulty: number
-  /**
-   * 题目id
-   */
   id: number
   knowledgeConcept: KnowledgeConcept[]
-  /**
-   * 题目内容
-   */
   questionText: string
+  review?: number
 }
 
-export interface KnowledgeConcept {
-  /**
-   * 知识点
-   */
-  knowledge: string
-  /**
-   * 知识点id
-   */
-  knowledgeId: number
-}
-
-const getProgramDetail = async () => {
-  // localStorage.removeItem('chatStorage')
-
-  try {
-    const res = await programDetails(questionId.value) // 假设 chatList 是一个异步请求函数
-    if (res.status === 200) {
-      programDetail.value = res.data.data
-    } else {
-      // 更新失败
-    }
-  } catch (err) {
-    console.error('获取推荐列表失败:', err)
-  }
-}
-getProgramDetail()
-
-const programDetail = ref<Program>({})
-
+const message = useMessage()
+const route = useRoute()
+const questionId = computed(() => {
+  const value = route.query.id
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return null
+  const id = Number(value)
+  return Number.isSafeInteger(id) && id > 0 ? id : null
+})
+const language =
+  localStorage.getItem('assistantType') === 'python' ? 'python' : 'java'
+const bodyStyle = { width: '700px' }
+const segmented = { content: 'soft' as const, footer: 'soft' as const }
+const programDetail = ref<Program | null>(null)
+const records = ref<ExerciseRecordList[]>([])
 const activeTab = ref('content')
-
 const code = ref('')
-
 const score = ref(0)
-
 const suggestion = ref('')
-
+const correctAnswer = ref<string | null>(null)
+const showModal = ref(false)
 const isLoading = ref(false)
-
+const isPageLoading = ref(false)
+const loadError = ref('')
+const historyReady = ref(false)
 const submitNum = ref(0)
-
-function submitCode(choice: string) {
-  isLoading.value = true
-  submitNum.value += 1
-  const request = {
-    id: questionId.value,
-    answer: code.value,
-    submitNum: submitNum.value,
-  }
-  console.log(request)
-
-  questionCode(request)
-    .then((response) => {
-      if (response?.code == 'LLM_ERROR') {
-        alert('大模型错误，请重新提交或稍后再试')
-      } else {
-        console.log('提交成功:', response.data)
-        score.value = response.data.data.score
-        // suggestion.value = response.data.data.suggestion
-        console.log(response.data.data)
-        suggestion.value = response.data.data.suggestion
-        correctAnswer.value = response.data.data.correctAnswer
-        showModal.value = true
-      }
-      isLoading.value = false
-    })
-    .catch((error) => {
-      console.error('提交失败:', error)
-      // Handle error
-    })
-}
-
 const isLiked = ref(false)
 const isDisliked = ref(false)
-async function toggleLike() {
-  if (isDisliked.value) {
-    await submitReview(0) // 先取消踩
-    isDisliked.value = false
-  }
-  await submitReview(isLiked.value ? 0 : 1) // 点赞或取消点赞
+const isReviewing = ref(false)
+let loadVersion = 0
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
 }
 
-async function toggleDislike() {
-  if (isLiked.value) {
-    await submitReview(0) // 先取消点赞
-    isLiked.value = false
-  }
-  await submitReview(isDisliked.value ? 0 : -1) // 踩或取消踩
-}
-
-const exerciseId = ref<number>(programDetail.value.id) // 从题目中获取ID
-
-// 提交评价
-async function submitReview(reviewType: number) {
-  // 检查 exerciseId 是否定义
-  if (typeof exerciseId.value === 'undefined' || exerciseId.value === null) {
-    console.error('exerciseId is undefined')
-    return
-  }
-  if (typeof reviewType !== 'number') {
-    console.error('Invalid reviewType', reviewType)
-    return
-  }
-
-  try {
-    const response = await reviewQuestion(
-      exerciseId.value.toString(),
-      reviewType,
+async function refreshRecords(id: number, version: number) {
+  const { data: result } = await recordList(id)
+  if (result.code !== 'SUCCESS' || !Array.isArray(result.data)) {
+    throw new Error(
+      result.code !== 'SUCCESS' && result.message
+        ? result.message
+        : '获取历史记录失败，请重试',
     )
-    if (response && response.status === 200) {
-      console.log('评价成功:', response.data)
-      if (reviewType === 1) {
-        isLiked.value = true
-        isDisliked.value = false
-      } else if (reviewType === -1) {
-        isLiked.value = false
-        isDisliked.value = true
-      } else {
-        isLiked.value = false
-        isDisliked.value = false
+  }
+  if (version !== loadVersion) return
+  records.value = result.data
+  submitNum.value = Math.max(submitNum.value, result.data.length)
+  historyReady.value = true
+}
+
+async function loadQuestion() {
+  const version = ++loadVersion
+  const id = questionId.value
+  programDetail.value = null
+  records.value = []
+  submitNum.value = 0
+  historyReady.value = false
+  code.value = ''
+  correctAnswer.value = null
+  showModal.value = false
+  activeTab.value = 'content'
+  isLiked.value = false
+  isDisliked.value = false
+  isLoading.value = false
+  isReviewing.value = false
+  loadError.value = ''
+  isPageLoading.value = false
+  if (id === null) {
+    loadError.value = '题目编号无效，请从题目列表重新进入'
+    return
+  }
+  isPageLoading.value = true
+  await Promise.all([
+    (async () => {
+      try {
+        const { data: result } = await programDetails(id)
+        if (result.code !== 'SUCCESS' || !result.data) {
+          throw new Error(
+            result.message && result.code !== 'SUCCESS'
+              ? result.message
+              : '题目不存在',
+          )
+        }
+        if (version !== loadVersion) return
+        programDetail.value = result.data
+        isLiked.value = result.data.review === 1
+        isDisliked.value = result.data.review === -1
+      } catch (error) {
+        if (version === loadVersion) {
+          loadError.value = errorMessage(error, '获取题目失败，请重试')
+        }
       }
-    } else {
-      console.error('评价失败:', response?.data || '未知错误')
+    })(),
+    refreshRecords(id, version).catch((error) => {
+      if (version === loadVersion) {
+        message.warning(errorMessage(error, '获取历史记录失败，请重试'))
+      }
+    }),
+  ])
+  if (version === loadVersion) isPageLoading.value = false
+}
+
+watch(questionId, loadQuestion, { immediate: true })
+
+async function submitCode() {
+  const id = questionId.value
+  if (isLoading.value || isPageLoading.value) return
+  if (id === null || !programDetail.value) {
+    message.warning('请先加载有效题目')
+    return
+  }
+  if (!code.value.trim()) {
+    message.warning('请输入代码后再提交')
+    return
+  }
+  const version = loadVersion
+  isLoading.value = true
+  try {
+    // 历史记录加载失败时先重试，避免使用错误的提交次数。
+    if (!historyReady.value) await refreshRecords(id, version)
+    if (version !== loadVersion) return
+    const nextSubmitNum = submitNum.value + 1
+    const { data: result } = await questionCode({
+      id,
+      answer: code.value,
+      submitNum: nextSubmitNum,
+    })
+    if (version !== loadVersion) return
+    if (result.code !== 'SUCCESS' || !result.data) {
+      throw new Error(
+        result.code === 'LLM_ERROR'
+          ? '评分服务暂不可用，请稍后重试'
+          : result.code !== 'SUCCESS' && result.message
+          ? result.message
+          : '提交失败，请重试',
+      )
+    }
+    if (typeof result.data.score !== 'number') {
+      throw new Error('评分结果无效，请稍后重试')
+    }
+    submitNum.value = nextSubmitNum
+    score.value = result.data.score
+    suggestion.value = result.data.suggestion ?? ''
+    correctAnswer.value = result.data.correctAnswer ?? null
+    showModal.value = true
+    try {
+      await refreshRecords(id, version)
+    } catch (error) {
+      if (version === loadVersion) {
+        message.warning('提交成功，但历史记录刷新失败，请稍后刷新页面')
+      }
     }
   } catch (error) {
-    console.error('提交评价失败:', error.message)
+    if (version === loadVersion) {
+      message.error(errorMessage(error, '提交失败，请检查网络后重试'))
+    }
+  } finally {
+    if (version === loadVersion) isLoading.value = false
+  }
+}
+
+function toggleLike() {
+  return submitReview(isLiked.value ? 0 : 1)
+}
+
+function toggleDislike() {
+  return submitReview(isDisliked.value ? 0 : -1)
+}
+
+async function submitReview(reviewType: number) {
+  if (!programDetail.value || isReviewing.value) return
+  const version = loadVersion
+  isReviewing.value = true
+  try {
+    const { data: result } = await reviewQuestion(
+      programDetail.value.id,
+      reviewType,
+    )
+    if (version !== loadVersion) return
+    if (result.code !== 'SUCCESS') {
+      throw new Error(result.message || '评价失败，请重试')
+    }
+    isLiked.value = reviewType === 1
+    isDisliked.value = reviewType === -1
+  } catch (error) {
+    if (version === loadVersion) {
+      message.error(errorMessage(error, '评价失败，请重试'))
+    }
+  } finally {
+    if (version === loadVersion) isReviewing.value = false
   }
 }
 </script>

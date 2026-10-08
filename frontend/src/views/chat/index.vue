@@ -14,6 +14,7 @@ import {
 import html2canvas from 'html2canvas'
 import { storeToRefs } from 'pinia'
 import { Message } from './components'
+import HeaderComponent from './components/Header/index.vue'
 import { useScroll } from './hooks/useScroll'
 import { useChat } from './hooks/useChat'
 import { useUsingContext } from './hooks/useUsingContext'
@@ -75,10 +76,12 @@ function handleSubmit() {
 
 async function onConversation() {
   const message = prompt.value
+  if (loading.value || !message.trim()) return
+  const chatId = Number(localStorage.getItem('active-uuid'))
 
   // 将用户的聊天保存到数据库
   chatMessage({
-    chatId: Number(localStorage.getItem('active-uuid')),
+    chatId,
     role: 0,
     content: message,
   })
@@ -91,14 +94,8 @@ async function onConversation() {
       console.error('新增失败:', err)
     })
 
-  if (loading.value) return
-
-  if (!message || message.trim() === '') return
-
-  controller = new AbortController()
-
   // 先添加用户消息
-  addChat(+localStorage.getItem('active-uuid'), {
+  addChat(chatId, {
     dateTime: new Date().toLocaleString(),
     text: message,
     inversion: true,
@@ -107,8 +104,38 @@ async function onConversation() {
     requestOptions: { prompt: message, options: null },
   })
 
-  // 添加 "SageJavon is thinking..." 提示
-  addChat(+localStorage.getItem('active-uuid'), {
+  prompt.value = ''
+  await generateAnswer(message, chatId)
+}
+
+async function onRegenerate(index: number) {
+  if (loading.value) return
+  const chatId = Number(localStorage.getItem('active-uuid'))
+  const answer = getChatByUuidAndIndex(chatId, index)
+  if (!answer || answer.inversion) return
+
+  // Older messages may not contain requestOptions; recover their preceding query.
+  const previousQuestion = dataSources.value
+    .slice(0, index)
+    .reverse()
+    .find((item) => item.inversion)
+  const message = answer.requestOptions?.prompt || previousQuestion?.text
+  if (!message?.trim()) {
+    ms.warning('找不到原始问题，无法重新生成，请重新发送问题')
+    return
+  }
+
+  await generateAnswer(message, chatId, index)
+}
+
+async function generateAnswer(
+  message: string,
+  chatId: number,
+  retryIndex?: number,
+) {
+  controller = new AbortController()
+  const requestController = controller
+  const pendingAnswer: Chat.Chat = {
     dateTime: new Date().toLocaleString(),
     text: 'SageJavon is thinking....',
     loading: true,
@@ -116,11 +143,13 @@ async function onConversation() {
     error: false,
     conversationOptions: null,
     requestOptions: { prompt: message, options: null },
-  })
+  }
+  if (retryIndex === undefined) addChat(chatId, pendingAnswer)
+  else updateChat(chatId, retryIndex, pendingAnswer)
 
+  const responseIndex = retryIndex ?? dataSources.value.length - 1
   scrollToBottom()
   loading.value = true
-  prompt.value = ''
 
   try {
     // 发起后端请求获取模型响应
@@ -128,6 +157,7 @@ async function onConversation() {
       rag_url + '/open_kf_api/queries/smart_query_stream',
       {
         method: 'POST',
+        signal: requestController.signal,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -138,86 +168,84 @@ async function onConversation() {
       },
     )
 
-    if (response.status === 500) {
-      addChat(+localStorage.getItem('active-uuid'), {
-        dateTime: new Date().toLocaleString(),
-        text: '服务器繁忙，请稍候再试，人少的时候再用，或者先去做做题吧',
-        inversion: false,
-        error: true,
-        loading: false,
-        conversationOptions: null,
-        requestOptions: {
-          prompt: '服务器繁忙，请稍候再试，人少的时候再用，或者先去做做题吧',
-          options: {},
-        },
-      })
-    } else if (response.status === 200) {
-      scrollToBottom()
-
-      const reader = response.body
-        .pipeThrough(new TextDecoderStream())
-        .getReader()
-      let finalResponse = ''
-      let textContent = '稍等...正在生成中\n'
-
-      // 使用逐字输出的方式
-      const writer = async () => {
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) break
-
-          // 每次获取一个字符并加入到当前文本中
-          textContent += value
-
-          // 更新聊天内容，逐字显示
-          updateChat(
-            +localStorage.getItem('active-uuid'),
-            dataSources.value.length - 1,
-            {
-              dateTime: new Date().toLocaleString(),
-              text: textContent, // 将每次读取到的内容更新到 chat
-              inversion: false,
-              error: false,
-              loading: false,
-              conversationOptions: {},
-              requestOptions: { prompt: message, options: {} },
-            },
-          )
-          scrollToBottom()
-        }
-      }
-
-      // 启动逐字输出
-      writer()
-
-      // 更新知识图谱
-      const res = await updateKnowledgeNodes(
-        localStorage.getItem('user-id'),
-        message,
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => null)
+      throw new Error(
+        errorBody?.message || `请求失败（HTTP ${response.status}）`,
       )
-      console.log('更新后的知识图谱节点')
-      console.log(res)
-
-      // 将模型的回复保存到数据库中
-      chatMessage({
-        chatId: Number(localStorage.getItem('active-uuid')),
-        role: 1,
-        content: finalResponse, // 在这里使用 finalResponse
-      })
-        .then((res) => {
-          if (res.status === 200) {
-            console.log('数据库添加成功')
-          }
-        })
-        .catch((err) => {
-          console.error('新增失败:', err)
-        })
     }
+    if (!response.body) throw new Error('服务器未返回响应内容')
+    scrollToBottom()
+
+    const reader = response.body
+      .pipeThrough(new TextDecoderStream())
+      .getReader()
+    let textContent = ''
+
+    // 使用逐字输出的方式
+    const writer = async () => {
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        // 每次获取一个字符并加入到当前文本中
+        textContent += value
+
+        // 更新聊天内容，逐字显示
+        updateChat(chatId, responseIndex, {
+          dateTime: new Date().toLocaleString(),
+          text: textContent, // 将每次读取到的内容更新到 chat
+          inversion: false,
+          error: false,
+          loading: false,
+          conversationOptions: {},
+          requestOptions: { prompt: message, options: {} },
+        })
+        scrollToBottom()
+      }
+    }
+
+    // 启动逐字输出
+    try {
+      await writer()
+    } finally {
+      reader.releaseLock()
+    }
+    const finalResponse = textContent
+    if (!finalResponse) throw new Error('模型未返回回答，请重试')
+
+    // 更新知识图谱
+    updateKnowledgeNodes(localStorage.getItem('user-id'), message).catch(
+      (error) => console.error('更新知识图谱失败:', error),
+    )
+
+    // 将模型的回复保存到数据库中
+    chatMessage({
+      chatId,
+      role: 1,
+      content: finalResponse,
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          console.log('数据库添加成功')
+        }
+      })
+      .catch((err) => {
+        console.error('新增失败:', err)
+      })
   } catch (error: any) {
     console.error('发生错误:', error)
+    updateChatSome(chatId, responseIndex, {
+      text:
+        error.name === 'AbortError'
+          ? '已停止生成'
+          : error.message || '请求失败，请检查算法服务是否正常运行',
+      error: error.name !== 'AbortError',
+      loading: false,
+    })
     scrollToBottom()
   } finally {
-    loading.value = false
+    if (controller === requestController) loading.value = false
   }
 }
 

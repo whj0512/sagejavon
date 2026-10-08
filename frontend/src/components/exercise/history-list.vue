@@ -15,7 +15,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(record, index) in records" :key="record.exerciseId">
+          <tr v-for="record in records" :key="record.recordId">
             <td class="score-cell">
               <div :class="getScoreClass(record.score)" class="score-div">
                 {{ record.score }}
@@ -26,7 +26,7 @@
             <td class="knowledge-container">
               <div
                 v-for="point in record.knowledgeConcept"
-                :key="point"
+                :key="point.knowledgeId"
                 class="knowledge-point text-ellipsis"
               >
                 {{ point.knowledge }}
@@ -109,15 +109,16 @@ const segmented = ref({
 const showModal = ref(false)
 const router = useRouter()
 interface Record {
-  exerciseId: string
+  recordId: number
+  exerciseId: number
   questionText: string
   knowledgeConcept: {
-    knowledgeId: string
+    knowledgeId: number
     knowledge: string
-  }
-  score: string
+  }[]
+  score: number
   submitTime: string
-  difficulty: string
+  difficulty: number
   type: number
 }
 const recordDetail = ref({})

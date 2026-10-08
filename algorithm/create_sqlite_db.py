@@ -4,17 +4,19 @@ import os
 import sqlite3
 import time
 from werkzeug.security import generate_password_hash
+from dotenv import load_dotenv
+
+# Load local paths before importing constants, which reads CHROMA_DB_DIR.
+load_dotenv(override=True)
+
 from server.app.utils.diskcache_client import diskcache_client
 from server.constant.constants import SQLITE_DB_DIR, SQLITE_DB_NAME
-from dotenv import load_dotenv
 
 
 os.makedirs(SQLITE_DB_DIR, exist_ok=True)
 
 
 def init_chroma_db():
-    # Load environment variables from .env file
-    load_dotenv(override=True)
     try:
         from server.constant.env_constants import check_env_variables
         check_env_variables()

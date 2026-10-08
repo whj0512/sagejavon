@@ -1,7 +1,7 @@
 // src/utils/request.ts
 import axios from 'axios'
 // config.ts
-export const BASE_URL = 'http://117.72.59.61/backend'
+export const BASE_URL = 'http://127.0.0.1:8080'
 const assistantType = localStorage.getItem('assistantType') || 'java'
 
 const dynamicBaseURL =

@@ -68,4 +68,8 @@ app.register_blueprint(urls.urls_bp)
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=7000)
+    app.run(
+        debug=False,
+        host=os.getenv('FLASK_HOST', '127.0.0.1'),
+        port=int(os.getenv('FLASK_PORT', '7100')),
+    )

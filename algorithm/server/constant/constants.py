@@ -1,3 +1,6 @@
+import os
+
+
 # Directory for storing cache files used by the DiskCache library
 DISKCACHE_DIR = "diskcache_dir"
 
@@ -11,7 +14,7 @@ SQLITE_DB_NAME = "mydatabase.sqlite3"
 MAX_CRAWL_PARALLEL_REQUEST = 5
 
 # Directory for storing Chroma vector database files
-CHROMA_DB_DIR = "chroma_dir"
+CHROMA_DB_DIR = os.getenv("CHROMA_DB_DIR", "chroma_dir_local")
 
 # Name of the collection in the Chroma vector database
 CHROMA_COLLECTION_NAME = "mychroma_collection"

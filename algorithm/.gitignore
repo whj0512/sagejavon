@@ -164,6 +164,7 @@ cython_debug/
 .idea/
 
 # sqlite_dir
-# chroma_dir
+# Local Chroma database; the tracked chroma_dir uses a newer schema.
+chroma_dir_local/
 # diskcache_dir
 # media_dir
