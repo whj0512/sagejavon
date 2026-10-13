@@ -1,4 +1,5 @@
 import os
+import httpx
 from openai import OpenAI
 from zhipuai import ZhipuAI
 from server.logger.logger_config import my_logger as logger
@@ -9,26 +10,36 @@ from sparkai.core.messages import ChatMessage
 class LLMGenerator:
     def __init__(self) -> None:
         self.llm_name = os.getenv('LLM_NAME')
+        # Bound silent upstream waits; SDK retries otherwise multiply the delay.
+        read_timeout = float(os.getenv('LLM_READ_TIMEOUT_SECONDS', '60'))
+        connect_timeout = float(os.getenv('LLM_CONNECT_TIMEOUT_SECONDS', '10'))
+        if read_timeout <= 0 or connect_timeout <= 0:
+            raise ValueError('LLM timeouts must be positive')
+        client_options = {
+            'timeout': httpx.Timeout(read_timeout, connect=connect_timeout),
+            'max_retries': 0,
+        }
         print(self.llm_name)
         if self.llm_name == 'OpenAI':
             api_key = os.getenv('OPENAI_API_KEY')
-            self.client = OpenAI(api_key=api_key)
+            self.client = OpenAI(api_key=api_key, **client_options)
             self.model_name = os.getenv('GPT_MODEL_NAME')
         elif self.llm_name == 'ZhipuAI':
             api_key = os.getenv('ZHIPUAI_API_KEY')
-            self.client = ZhipuAI(api_key=api_key)
+            self.client = ZhipuAI(api_key=api_key, **client_options)
             self.model_name = os.getenv('GLM_MODEL_NAME')
         elif self.llm_name == 'Ollama':
             ollama_base_url = os.getenv('OLLAMA_BASE_URL')
             self.client = OpenAI(
                 base_url=f"{ollama_base_url}/v1",
                 api_key='ollama',  # required, but unused
+                **client_options,
             )
             self.model_name = os.getenv('OLLAMA_MODEL_NAME')
         elif self.llm_name == 'DeepSeek':
             api_key = os.getenv('DEEPSEEK_API_KEY')
             self.client = OpenAI(
-                api_key=api_key, base_url="https://api.deepseek.com/v1")
+                api_key=api_key, base_url="https://api.deepseek.com/v1", **client_options)
             self.model_name = os.getenv('DEEPSEEK_MODEL_NAME')
         elif self.llm_name == 'SparkAI':
             print(self.llm_name)

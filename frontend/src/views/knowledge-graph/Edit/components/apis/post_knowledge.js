@@ -4,7 +4,7 @@ async function postKnowledge(nodes) {
   const token = localStorage.getItem('user-token');
   const config = {
     method: 'post',
-    url: 'http://localhost:8080/knowledge',
+    url: '/api/knowledge',
     headers: {
       'Content-Type': 'application/json',
       'token': token,

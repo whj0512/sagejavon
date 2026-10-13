@@ -3,6 +3,8 @@ import importlib.util
 import os
 from pathlib import Path
 import sys
+from threading import Event
+import time
 from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -94,6 +96,86 @@ class QueryStreamTests(unittest.TestCase):
     def test_empty_answer_is_error(self):
         self.queries.generate_answer = Mock(return_value=iter([]))
         self.assertEqual(self.post().status_code, 502)
+        self.queries.save_user_query_history.assert_not_called()
+
+    def test_missing_usage_is_not_a_warning(self):
+        self.queries.generate_answer = Mock(return_value=iter([
+            SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content='hello'))], usage=None),
+        ]))
+        self.assertEqual(self.post().get_data(as_text=True), 'hello')
+        self.queries.logger.warning.assert_not_called()
+
+    def test_metadata_stream_has_time_limit(self):
+        stream = Mock()
+        stream.__iter__ = Mock(return_value=iter([
+            SimpleNamespace(choices=[], usage=None),
+        ]))
+        self.queries.generate_answer = Mock(return_value=stream)
+        with patch.object(self.queries.time, 'monotonic', side_effect=[0, 181]):
+            response = self.post()
+        self.assertEqual(response.status_code, 502)
+        stream.close.assert_called_once()
+        self.queries.save_user_query_history.assert_not_called()
+
+    def test_disconnect_closes_upstream(self):
+        stream = Mock()
+        stream.__iter__ = Mock(return_value=iter([
+            SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content='hello'))]),
+            SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content='world'))]),
+        ]))
+        self.queries.generate_answer = Mock(return_value=stream)
+        response = self.post()
+        response.close()
+        stream.close.assert_called_once()
+        self.queries.save_user_query_history.assert_not_called()
+
+    def test_first_answer_deadline_returns_before_blocked_model(self):
+        release = Event()
+        closed = Event()
+
+        def slow_stream():
+            try:
+                # Upstream traffic without answer text must not reset the deadline.
+                yield SimpleNamespace(choices=[], usage=None)
+                release.wait(2)
+                yield SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content='late'))])
+            finally:
+                closed.set()
+
+        self.queries.generate_answer = Mock(return_value=slow_stream())
+        self.queries.FIRST_ANSWER_TIMEOUT_SECONDS = 0.05
+        started = time.monotonic()
+        try:
+            response = self.post()
+            self.assertLess(time.monotonic() - started, 1)
+            self.assertFalse(release.is_set())
+            self.assertEqual(response.status_code, 502)
+            self.assertEqual(response.json['retcode'], -30001)
+            self.assertEqual(response.headers['Access-Control-Allow-Origin'], 'http://localhost:3003')
+        finally:
+            release.set()
+        self.assertTrue(closed.wait(1))
+        self.queries.save_user_query_history.assert_not_called()
+
+    def test_startup_capacity_returns_service_unavailable(self):
+        with patch.object(self.queries, 'first_chunk_with_timeout',
+                          side_effect=self.queries.StreamStartBusy('busy')):
+            response = self.post()
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json['retcode'], -30002)
+
+    def test_older_zhipu_stream_closes_http_response(self):
+        http_response = Mock()
+
+        class LegacyStream:
+            response = http_response
+
+            def __iter__(self):
+                yield SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content='hello'))])
+
+        self.queries.generate_answer = Mock(return_value=LegacyStream())
+        self.assertEqual(self.post().get_data(as_text=True), 'hello')
+        http_response.close.assert_called_once()
 
     def test_midstream_failure_is_not_success(self):
         def broken_stream():

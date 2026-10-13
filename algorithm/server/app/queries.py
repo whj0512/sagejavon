@@ -13,6 +13,7 @@ from server.app.utils.decorators import token_required
 from server.app.utils.sqlite_client import get_db_connection
 from server.app.utils.diskcache_client import diskcache_client
 from server.app.utils.diskcache_lock import diskcache_lock
+from server.app.utils.stream_start import first_chunk_with_timeout, StreamStartBusy
 from server.logger.logger_config import my_logger as logger
 from server.rag.generation.llm import llm_generator
 from server.rag.pre_retrieval.query_transformation.rewrite import detect_query_lang
@@ -27,6 +28,12 @@ BOT_TOPIC = os.getenv('BOT_TOPIC')
 USE_PREPROCESS_QUERY = int(os.getenv('USE_PREPROCESS_QUERY'))
 USE_RERANKING = int(os.getenv('USE_RERANKING'))
 USE_DEBUG = int(os.getenv('USE_DEBUG'))
+STREAM_MAX_SECONDS = float(os.getenv('LLM_STREAM_MAX_SECONDS', '180'))
+FIRST_ANSWER_TIMEOUT_SECONDS = float(os.getenv('LLM_FIRST_ANSWER_TIMEOUT_SECONDS', '45'))
+if STREAM_MAX_SECONDS <= 0:
+    raise ValueError('LLM_STREAM_MAX_SECONDS must be positive')
+if FIRST_ANSWER_TIMEOUT_SECONDS <= 0:
+    raise ValueError('LLM_FIRST_ANSWER_TIMEOUT_SECONDS must be positive')
 
 
 queries_bp = Blueprint('queries', __name__, url_prefix='/open_kf_api/queries')
@@ -453,31 +460,47 @@ def smart_query_stream():
             query = query[:MAX_QUERY_LENGTH]
 
         def generate_llm():
-            beg_time = time.time()
+            beg_time = time.monotonic()
             answer_chunks = []
-            response = generate_answer(query, user_id, True)
-            for chunk in response:
-                # logger.info(f"chunk is: {chunk}")
-                # Usage-only chunks can have an empty choices list.
-                content = chunk.choices[0].delta.content if chunk.choices else None
-                if content:
-                    answer_chunks.append(content)
-                    # Send each answer segment
-                    yield content
+            response = None
+            logger.info(f'Model stream starting: user_id={user_id}, provider={LLM_NAME}')
+            try:
+                response = generate_answer(query, user_id, True)
+                for chunk in response:
+                    # Also bound streams that emit reasoning/metadata but no answer.
+                    if time.monotonic() - beg_time > STREAM_MAX_SECONDS:
+                        raise TimeoutError('Model stream exceeded its time limit')
+                    content = chunk.choices[0].delta.content if chunk.choices else None
+                    if content:
+                        if not answer_chunks:
+                            logger.info(f'Model first answer chunk: user_id={user_id}, '
+                                        f'elapsed={time.monotonic() - beg_time:.2f}s')
+                        answer_chunks.append(content)
+                        yield content
 
-                if hasattr(chunk, 'usage'):
-                    logger.warning(
-                        f"[Track token consumption of streaming] for smart_query_stream: '{query}', usage={chunk.usage}")
+                    usage = getattr(chunk, 'usage', None)
+                    if usage is not None:
+                        logger.info(f'[Track token consumption of streaming] '
+                                    f'for smart_query_stream: user_id={user_id}, usage={usage}')
+            finally:
+                # Older ZhipuAI streams expose the HTTP response, but no close().
+                close = getattr(response, 'close', None)
+                if not callable(close):
+                    close = getattr(getattr(response, 'response', None), 'close', None)
+                if callable(close):
+                    close()
+            if not answer_chunks:
+                raise RuntimeError('The model returned an empty answer')
             # After the streaming response is complete, save to Cache and SQLite
             answer = ''.join(answer_chunks)
-            timecost = time.time() - beg_time
+            timecost = time.monotonic() - beg_time
             logger.success(
                 f"query: '{query}' and user_id: '{user_id}' is processed successfully, the answer is:\n{answer}\nthe total timecost is {timecost}\n")
             save_user_query_history(user_id, query, answer, True)
         # Advance the generator while Flask can still produce an error response.
         # Otherwise a failure before the first chunk bypasses Flask's CORS hooks.
         stream = generate_llm()
-        first_chunk = next(stream, None)
+        first_chunk = first_chunk_with_timeout(stream, FIRST_ANSWER_TIMEOUT_SECONDS)
         if first_chunk is None:
             raise RuntimeError('The model returned an empty answer')
 
@@ -494,6 +517,12 @@ def smart_query_stream():
         result = Response(generate_response(), mimetype="text/event-stream", headers=headers)
         result.call_on_close(stream.close)
         return result
+    except TimeoutError:
+        logger.exception('Timed out waiting for the first model answer')
+        return {'retcode': -30001, 'message': '模型响应超时，请稍后重试。', 'data': {}}, 502
+    except StreamStartBusy:
+        logger.warning('Model startup capacity exhausted')
+        return {'retcode': -30002, 'message': '模型服务繁忙，请稍后重试。', 'data': {}}, 503
     except Exception as e:
         logger.exception('Unable to start model stream')
         return {'retcode': -30000, 'message': '模型服务暂时不可用，请稍后重试。', 'data': {}}, 502
