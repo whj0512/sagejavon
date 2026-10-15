@@ -123,11 +123,11 @@ export default {
     "unauthorizedTips": '未经授权，请先进行验证。',
 		"stopResponding": '停止响应',
   },
-  "placeholder": '请提问和java相关的任何问题~',
+  "placeholder": '请提问和课程相关的任何问题',
   "placeholderMobile": '来说点什么...',
   "chat": {
     "newChatButton": '新建聊天',
-    "placeholder": '请提问和java相关的任何问题~',
+    "placeholder": '请提问和课程相关的任何问题',
     "placeholderMobile": '来说点什么...',
     "copy": '复制',
     "copied": '复制成功',

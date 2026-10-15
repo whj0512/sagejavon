@@ -1,6 +1,6 @@
 // src/components/api/knowledge.ts
 import javaRequest from '@/utils/request';
-import type { AxiosResponse } from 'axios';
+import type { AxiosError, AxiosResponse } from 'axios';
 
 // 知识点项接口
 interface KnowledgeItem {
